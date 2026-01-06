@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Implementation Manager Deal Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ps-green: #85ad33;
+      --ps-dark-green: #618025;
+      --ps-blue: #7bbaf0;
+      --ps-gold: #f2b001;
+      --ps-light-green: #e5f1d4;
+      --ps-light-gray: #f7f8f8;
+      --ps-dark-gray: #444444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Montserrat", Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--ps-light-gray);
+      color: var(--ps-dark-gray);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      color: var(--ps-green);
+      margin: 0;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 4px 0 0;
+      color: #666;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 24px;
+      border-bottom: 2px solid #ddd;
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      padding-bottom: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #666;
+    }
+
+    .tab.active {
+      color: var(--ps-green);
+      border-bottom: 4px solid var(--ps-green);
+    }
+
+    /* Summary Cards */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .card .value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ps-dark-green);
+    }
+
+    .card .label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--ps-light-green);
+      font-weight: 600;
+    }
+
+    /* Status Pills */
+    .pill {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .green { background: #dff0d8; color: #3c763d; }
+    .yellow { background: #fcf8e3; color: #8a6d3b; }
+    .red { background: #f2dede; color: #a94442; }
+
+    /* IM Cards */
+    .im-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    .progress {
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--ps-green);
+      width: 65%; /* placeholder */
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+      margin-top: 48px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <header>
+      <h1>Implementation Manager Deal Dashboard</h1>
+      <p>Workload visibility & deal assignment support (Concept)</p>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="showView('im')">My Book of Business</div>
+      <div class="tab" onclick="showView('lead')">Territory Overview</div>
+      <div class="tab" onclick="showView('manager')">Team Workload</div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="summary">
+      <div class="card">
+        <div class="value">12</div>
+        <div class="label">Active Deals (TBD)</div>
+      </div>
+      <div class="card">
+        <div class="value">38</div>
+        <div class="label">Total Points (TBD)</div>
+      </div>
+      <div class="card">
+        <div class="value">72%</div>
+        <div class="label">% Capacity Used (TBD)</div>
+      </div>
+      <div class="card">
+        <div class="value">3</div>
+        <div class="label">At-Risk Deals</div>
+      </div>
+    </div>
+
+    <!-- IM View -->
+    <div id="im" class="view active">
+      <h2>My Deals</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Size</th>
+            <th>SIS</th>
+            <th>Health</th>
+            <th>Adjustments</th>
+            <th>Total Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>District A</td>
+            <td>Medium</td>
+            <td>PowerSchool</td>
+            <td><span class="pill yellow">Yellow</span></td>
+            <td>Pilot</td>
+            <td>6 (TBD)</td>
+          </tr>
+          <tr>
+            <td>Charter Network B</td>
+            <td>Large</td>
+            <td>Infinite Campus</td>
+            <td><span class="pill red">Red</span></td>
+            <td>Extended Launch</td>
+            <td>8 (TBD)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Lead View -->
+    <div id="lead" class="view">
+      <h2>Territory Overview</h2>
+      <div class="im-grid">
+        <div class="card">
+          <strong>IM: Alex R.</strong><br/>
+          Tier: T3<br/>
+          Points: 42 (TBD)
+          <div class="progress">
+            <div class="progress-bar"></div>
+          </div>
+        </div>
+        <div class="card">
+          <strong>IM: Jordan M.</strong><br/>
+          Tier: T2<br/>
+          Points: 55 (TBD)
+          <div class="progress">
+            <div class="progress-bar" style="width:85%; background: var(--ps-gold);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manager View -->
+    <div id="manager" class="view">
+      <h2>Team Workload Summary</h2>
+      <div class="card">
+        <p><strong>Average Points per Tier:</strong> TBD</p>
+        <p><strong>All IMs at Capacity?</strong> TBD</p>
+        <p><strong>Auto-Assignment Preview:</strong> Concept Only</p>
+      </div>
+    </div>
+
+    <footer>
+      © 2026 ParentSquare • Internal Tool Concept
+    </footer>
+
+  </div>
+
+  <script>
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+      document.getElementById(viewId).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
