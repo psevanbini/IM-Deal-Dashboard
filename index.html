@@ -1,293 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Implementation Manager Deal Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8" />
+<title>Implementation Manager Deal Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#85ad33; --dark-green:#618025;
+  --gold:#f2b001; --blue:#7bbaf0;
+  --light:#f7f8f8; --text:#444;
+}
 
-  <style>
-    :root {
-      --ps-green: #85ad33;
-      --ps-dark-green: #618025;
-      --ps-blue: #7bbaf0;
-      --ps-gold: #f2b001;
-      --ps-light-green: #e5f1d4;
-      --ps-light-gray: #f7f8f8;
-      --ps-dark-gray: #444444;
-    }
+* { box-sizing:border-box; font-family:Montserrat, Arial; }
+body { margin:0; background:var(--light); color:var(--text); }
 
-    * {
-      box-sizing: border-box;
-      font-family: "Montserrat", Arial, sans-serif;
-    }
+.container { max-width:1300px; margin:auto; padding:24px; }
 
-    body {
-      margin: 0;
-      background: var(--ps-light-gray);
-      color: var(--ps-dark-gray);
-    }
+header {
+  display:flex; align-items:center; gap:16px;
+  margin-bottom:20px;
+}
+header img { height:42px; }
+header h1 { margin:0; color:var(--green); }
+header p { margin:4px 0 0; }
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px;
-    }
+.tabs { display:flex; gap:24px; border-bottom:2px solid #ddd; }
+.tab { cursor:pointer; padding-bottom:10px; font-weight:600; }
+.tab.active { color:var(--green); border-bottom:4px solid var(--green); }
 
-    /* Header */
-    header {
-      margin-bottom: 24px;
-    }
+.summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:24px 0; }
+.card { background:white; padding:16px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
 
-    header h1 {
-      color: var(--ps-green);
-      margin: 0;
-      font-size: 28px;
-    }
+.value { font-size:26px; font-weight:700; color:var(--dark-green); }
+.label { font-size:13px; color:#666; }
 
-    header p {
-      margin: 4px 0 0;
-      color: #666;
-    }
+.view { display:none; }
+.view.active { display:block; }
 
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 24px;
-      border-bottom: 2px solid #ddd;
-      margin-bottom: 24px;
-    }
+table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; }
+th, td { padding:10px; border-bottom:1px solid #eee; font-size:13px; }
+th { background:#e5f1d4; }
 
-    .tab {
-      padding-bottom: 12px;
-      cursor: pointer;
-      font-weight: 600;
-      color: #666;
-    }
+select { width:100%; }
 
-    .tab.active {
-      color: var(--ps-green);
-      border-bottom: 4px solid var(--ps-green);
-    }
+.pill { padding:4px 8px; border-radius:10px; font-size:12px; font-weight:600; }
+.green { background:#dff0d8; }
+.yellow { background:#fcf8e3; }
+.red { background:#f2dede; }
 
-    /* Summary Cards */
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
-    }
+.toggle { margin:12px 0; }
 
-    .card {
-      background: white;
-      padding: 16px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
+.im-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
 
-    .card .value {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--ps-dark-green);
-    }
+.progress { position:relative; height:8px; background:#eee; border-radius:4px; margin-top:8px; }
+.bar { height:100%; background:var(--green); }
+.marker { position:absolute; top:-4px; width:2px; height:16px; background:#999; }
+.marker.yellow { left:70%; background:var(--gold); }
+.marker.red { left:90%; background:#c0392b; }
 
-    .card .label {
-      font-size: 14px;
-      color: #666;
-    }
+.note { margin-top:8px; width:100%; }
 
-    /* Views */
-    .view {
-      display: none;
-    }
+.subtabs { display:flex; gap:16px; margin:16px 0; }
+.subtab { cursor:pointer; font-weight:600; }
+.subtab.active { color:var(--green); }
 
-    .view.active {
-      display: block;
-    }
-
-    /* Tables */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-      font-size: 14px;
-    }
-
-    th {
-      background: var(--ps-light-green);
-      font-weight: 600;
-    }
-
-    /* Status Pills */
-    .pill {
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-block;
-    }
-
-    .green { background: #dff0d8; color: #3c763d; }
-    .yellow { background: #fcf8e3; color: #8a6d3b; }
-    .red { background: #f2dede; color: #a94442; }
-
-    /* IM Cards */
-    .im-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-    }
-
-    .progress {
-      height: 8px;
-      background: #eee;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 8px;
-    }
-
-    .progress-bar {
-      height: 100%;
-      background: var(--ps-green);
-      width: 65%; /* placeholder */
-    }
-
-    footer {
-      text-align: center;
-      font-size: 12px;
-      color: #777;
-      margin-top: 48px;
-    }
-  </style>
+footer { text-align:center; margin-top:40px; font-size:12px; }
+</style>
 </head>
 
 <body>
-  <div class="container">
+<div class="container">
 
-    <header>
-      <h1>Implementation Manager Deal Dashboard</h1>
-      <p>Workload visibility & deal assignment support (Concept)</p>
-    </header>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab active" onclick="showView('im')">My Book of Business</div>
-      <div class="tab" onclick="showView('lead')">Territory Overview</div>
-      <div class="tab" onclick="showView('manager')">Team Workload</div>
-    </div>
-
-    <!-- Summary Metrics -->
-    <div class="summary">
-      <div class="card">
-        <div class="value">12</div>
-        <div class="label">Active Deals (TBD)</div>
-      </div>
-      <div class="card">
-        <div class="value">38</div>
-        <div class="label">Total Points (TBD)</div>
-      </div>
-      <div class="card">
-        <div class="value">72%</div>
-        <div class="label">% Capacity Used (TBD)</div>
-      </div>
-      <div class="card">
-        <div class="value">3</div>
-        <div class="label">At-Risk Deals</div>
-      </div>
-    </div>
-
-    <!-- IM View -->
-    <div id="im" class="view active">
-      <h2>My Deals</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Size</th>
-            <th>SIS</th>
-            <th>Health</th>
-            <th>Adjustments</th>
-            <th>Total Points</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>District A</td>
-            <td>Medium</td>
-            <td>PowerSchool</td>
-            <td><span class="pill yellow">Yellow</span></td>
-            <td>Pilot</td>
-            <td>6 (TBD)</td>
-          </tr>
-          <tr>
-            <td>Charter Network B</td>
-            <td>Large</td>
-            <td>Infinite Campus</td>
-            <td><span class="pill red">Red</span></td>
-            <td>Extended Launch</td>
-            <td>8 (TBD)</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Lead View -->
-    <div id="lead" class="view">
-      <h2>Territory Overview</h2>
-      <div class="im-grid">
-        <div class="card">
-          <strong>IM: Alex R.</strong><br/>
-          Tier: T3<br/>
-          Points: 42 (TBD)
-          <div class="progress">
-            <div class="progress-bar"></div>
-          </div>
-        </div>
-        <div class="card">
-          <strong>IM: Jordan M.</strong><br/>
-          Tier: T2<br/>
-          Points: 55 (TBD)
-          <div class="progress">
-            <div class="progress-bar" style="width:85%; background: var(--ps-gold);"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Manager View -->
-    <div id="manager" class="view">
-      <h2>Team Workload Summary</h2>
-      <div class="card">
-        <p><strong>Average Points per Tier:</strong> TBD</p>
-        <p><strong>All IMs at Capacity?</strong> TBD</p>
-        <p><strong>Auto-Assignment Preview:</strong> Concept Only</p>
-      </div>
-    </div>
-
-    <footer>
-      © 2026 ParentSquare • Internal Tool Concept
-    </footer>
-
+<header>
+  <img src="logo.png" alt="ParentSquare Logo">
+  <div>
+    <h1>Implementation Manager Deal Dashboard</h1>
+    <p>Workload Visibility & Deal Assignment Support</p>
   </div>
+</header>
 
-  <script>
-    function showView(viewId) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+<div class="tabs">
+  <div class="tab active" onclick="showView('im')">My Book of Business</div>
+  <div class="tab" onclick="showView('territory')">Territory Overview</div>
+  <div class="tab" onclick="showView('team')">Total Team Workload</div>
+</div>
 
-      document.getElementById(viewId).classList.add('active');
-      event.target.classList.add('active');
-    }
-  </script>
+<div class="summary">
+  <div class="card"><div class="value">14</div><div class="label">Active Deals</div></div>
+  <div class="card"><div class="value">67</div><div class="label">Total Points</div></div>
+  <div class="card"><div class="value">74%</div><div class="label">Capacity Used</div></div>
+  <div class="card"><div class="value">5</div><div class="label">At-Risk Deals</div></div>
+</div>
+
+<!-- My Book of Business -->
+<div id="im" class="view active">
+<h2>My Deals</h2>
+<table>
+<thead>
+<tr>
+<th>Customer</th><th>Size</th><th>SIS</th><th>Health</th><th>Adjustments</th><th>Total Points</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>District A</td><td>Medium (3)</td><td>PowerSchool (3)</td><td><span class="pill yellow">Yellow (1)</span></td>
+<td>
+<select multiple>
+<option>Pilot (+1)</option><option>Extended Launch (+1)</option>
+<option>DPA (+1)</option><option>New Hire (+1)</option>
+</select>
+</td>
+<td>8</td>
+</tr>
+
+<!-- 10 additional examples -->
+<tr><td>Charter B</td><td>Large (2)</td><td>Infinite Campus (2)</td><td><span class="pill red">Red (2)</span></td><td><select multiple><option>Extended Launch</option></select></td><td>7</td></tr>
+<tr><td>District C</td><td>Small (1)</td><td>Alma (1)</td><td><span class="pill green">Green (0)</span></td><td><select multiple></select></td><td>2</td></tr>
+<tr><td>Network D</td><td>Strategic (4)</td><td>PowerSchool (3)</td><td><span class="pill yellow">Yellow (1)</span></td><td><select multiple><option>Pilot</option><option>DPA</option></select></td><td>9</td></tr>
+<tr><td>District E</td><td>Medium (3)</td><td>Skyward (2)</td><td><span class="pill green">Green (0)</span></td><td><select multiple></select></td><td>5</td></tr>
+<tr><td>Charter F</td><td>Small (1)</td><td>FACTS (1)</td><td><span class="pill red">Red (2)</span></td><td><select multiple><option>Extended Launch</option></select></td><td>5</td></tr>
+<tr><td>District G</td><td>Large (2)</td><td>Synergy (1)</td><td><span class="pill yellow">Yellow (1)</span></td><td><select multiple></select></td><td>4</td></tr>
+<tr><td>Network H</td><td>Medium (3)</td><td>Genesis (1)</td><td><span class="pill green">Green (0)</span></td><td><select multiple><option>Pilot</option></select></td><td>5</td></tr>
+<tr><td>District I</td><td>Strategic (4)</td><td>OneRoster (3)</td><td><span class="pill red">Red (2)</span></td><td><select multiple><option>DPA</option></select></td><td>9</td></tr>
+<tr><td>Charter J</td><td>Medium (3)</td><td>Aeries (2)</td><td><span class="pill yellow">Yellow (1)</span></td><td><select multiple></select></td><td>6</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- Territory Overview -->
+<div id="territory" class="view">
+<h2>Territory Overview</h2>
+<div class="toggle">View: <button>Cards</button> <button>List</button></div>
+
+<div class="im-grid">
+<div class="card"><strong>Alex R.</strong><br>Tier T3<br>Points: 42
+<div class="progress"><div class="bar" style="width:65%"></div><div class="marker yellow"></div><div class="marker red"></div></div>
+<textarea class="note" placeholder="Notes..."></textarea></div>
+
+<div class="card"><strong>Jordan M.</strong><br>Tier T2<br>Points: 55
+<div class="progress"><div class="bar" style="width:85%"></div><div class="marker yellow"></div><div class="marker red"></div></div>
+<textarea class="note"></textarea></div>
+
+<!-- 5 more IMs -->
+<div class="card"><strong>Casey L.</strong><br>Tier T1<br>Points: 28<div class="progress"><div class="bar" style="width:40%"></div><div class="marker yellow"></div><div class="marker red"></div></div></div>
+<div class="card"><strong>Drew P.</strong><br>Tier T4<br>Points: 61<div class="progress"><div class="bar" style="width:90%"></div><div class="marker yellow"></div><div class="marker red"></div></div></div>
+<div class="card"><strong>Morgan S.</strong><br>Tier T3<br>Points: 47<div class="progress"><div class="bar" style="width:70%"></div><div class="marker yellow"></div><div class="marker red"></div></div></div>
+</div>
+</div>
+
+<!-- Total Team Workload -->
+<div id="team" class="view">
+<h2>Total Team Workload</h2>
+
+<div class="subtabs">
+<div class="subtab active">All IMs</div>
+<div class="subtab">Large / Enterprise / Strategic Review</div>
+</div>
+
+<p>Includes all Territory IMs + additional sample IMs. Sortable by Tier and Alphabetical.</p>
+
+</div>
+
+<footer>© 2026 ParentSquare • Internal Tool Concept</footer>
+
+</div>
+
+<script>
+function showView(id){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+event.target.classList.add('active');
+}
+</script>
+
 </body>
 </html>
