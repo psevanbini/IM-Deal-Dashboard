@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Implementation Manager Deal Dashboard</title>
+  <title>ParentSquare Implementation Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-
   <style>
     :root {
       --ps-green: #85ad33;
@@ -20,167 +19,288 @@
 
     * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
     body { margin: 0; background: var(--ps-light-gray); color: var(--ps-dark-gray); }
-    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-    
-    header { margin-bottom: 24px; }
-    header h1 { color: var(--ps-green); margin: 0; font-size: 28px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
 
+    /* Header Branding */
+    header { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 24px; }
+    .logo { height: 55px; width: auto; align-self: stretch; display: flex; align-items: center; }
+    .logo img { height: 100%; }
+    .header-text h1 { color: var(--ps-green); margin: 0; font-size: 28px; line-height: 1.2; }
+    .header-text p { margin: 0; color: #666; font-size: 16px; line-height: 1.2; }
+
+    /* Tabs & Controls */
     .tabs { display: flex; gap: 24px; border-bottom: 2px solid #ddd; margin-bottom: 24px; }
-    .tab { padding-bottom: 12px; cursor: pointer; font-weight: 600; color: #666; transition: 0.3s; }
+    .tab { padding-bottom: 12px; cursor: pointer; font-weight: 600; color: #666; }
     .tab.active { color: var(--ps-green); border-bottom: 4px solid var(--ps-green); }
+    .sub-tabs { display: flex; gap: 15px; margin-bottom: 15px; }
+    .sub-tab { font-size: 13px; padding: 5px 10px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; }
+    .sub-tab.active { background: var(--ps-green); color: white; border-color: var(--ps-green); }
 
+    /* Summary Cards */
     .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
-    .card { background: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .card { background: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); position: relative; }
     .card .value { font-size: 26px; font-weight: 700; color: var(--ps-dark-green); }
     .card .label { font-size: 14px; color: #666; }
 
+    /* Tables & Stages */
     .view { display: none; }
     .view.active { display: block; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+    th { background: var(--ps-light-green); font-weight: 700; }
+    .stage-spacer { height: 20px; background: transparent; }
+    .stage-header { background: #f0f0f0; font-weight: 700; font-size: 11px; text-transform: uppercase; color: #777; }
 
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-top: 10px; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
-    th { background: var(--ps-light-green); font-weight: 600; }
+    /* Adjustments Accordion */
+    .adj-container { position: relative; }
+    .adj-trigger { cursor: pointer; color: var(--ps-blue); text-decoration: underline; font-size: 12px; }
+    .adj-content { display: none; position: absolute; background: white; border: 1px solid #ddd; padding: 10px; z-index: 10; width: 180px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .adj-content.open { display: block; }
 
-    .pill { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    /* Capacity Bars & Markers */
+    .progress-container { margin-top: 10px; position: relative; height: 25px; }
+    .progress { height: 10px; background: #eee; border-radius: 5px; position: relative; top: 10px; }
+    .progress-bar { height: 100%; border-radius: 5px; }
+    .marker { position: absolute; top: 0; bottom: 0; width: 2px; height: 15px; background: #bbb; z-index: 2; }
+    .marker.yellow-cap { left: 70%; } /* Placeholder for TBD */
+    .marker.red-cap { left: 90%; }    /* Placeholder for TBD */
+
+    /* Layout Toggle */
+    .toggle-bar { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; }
+    .im-list-view { display: flex; flex-direction: column; gap: 8px; }
+    .im-grid-view { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+
+    .pill { padding: 3px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; }
     .green { background: #dff0d8; color: #3c763d; }
     .yellow { background: #fcf8e3; color: #8a6d3b; }
     .red { background: #f2dede; color: #a94442; }
-
-    .im-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-    .progress-container { margin-top: 15px; }
-    .progress { height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
-    .progress-bar { height: 100%; transition: width 0.5s ease; }
-    
-    .tier-badge { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; vertical-align: middle; }
+    textarea { width: 100%; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <h1>Implementation Manager Dashboard</h1>
-      <p>Live Book of Business & Capacity Tracking</p>
-    </header>
-
-    <div class="tabs">
-      <div class="tab active" onclick="showView(event, 'im-view')">My Book of Business</div>
-      <div class="tab" onclick="showView(event, 'territory-view')">Territory Overview</div>
+<div class="container">
+  <header>
+    <div class="logo">
+      <img src="https://www.parentsquare.com/wp-content/uploads/2021/01/ParentSquare-Logo_color.png" alt="ParentSquare">
     </div>
-
-    <div id="summary-counters" class="summary">
-      <div class="card"><div id="total-deals" class="value">0</div><div class="label">Active Deals</div></div>
-      <div class="card"><div id="total-points" class="value">0</div><div class="label">Total Points</div></div>
-      <div class="card"><div id="avg-capacity" class="value">0%</div><div class="label">Avg. Team Capacity</div></div>
+    <div class="header-text">
+      <h1>Implementation Manager Deal Dashboard</h1>
+      <p>Workload Visibility & Deal Assignment Support</p>
     </div>
+  </header>
 
-    <div id="im-view" class="view active">
-      <h2>My Current Deals</h2>
-      <table id="deals-table">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Size</th>
-            <th>SIS</th>
-            <th>Health</th>
-            <th>Points</th>
-          </tr>
-        </thead>
-        <tbody id="deals-body">
-          </tbody>
-      </table>
-    </div>
-
-    <div id="territory-view" class="view">
-      <h2>Team Workload</h2>
-      <div class="im-grid" id="im-grid">
-        </div>
-    </div>
-
-    <footer>© 2026 ParentSquare • Implementation Team</footer>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('my-book')">My Book of Business</div>
+    <div class="tab" onclick="showTab('territory')">Territory Overview</div>
+    <div class="tab" onclick="showTab('total-workload')">Total Team Workload</div>
   </div>
 
-  <script>
-    // 1. Data Structure
-    const teamData = {
-      ims: [
-        { name: "Alex R.", tier: 3, maxPoints: 50, deals: [
-          { name: "District A", size: "Medium", sis: "PowerSchool", health: "yellow", points: 6 },
-          { name: "Charter B", size: "Large", sis: "Infinite Campus", health: "red", points: 8 }
-        ]},
-        { name: "Jordan M.", tier: 2, maxPoints: 40, deals: [
-          { name: "Crestview USD", size: "Large", sis: "Aeries", health: "green", points: 10 },
-          { name: "Oak Academy", size: "Small", sis: "Skyward", health: "green", points: 4 }
-        ]}
-      ]
-    };
+  <div class="summary">
+    <div class="card"><div id="sum-deals" class="value">0</div><div class="label">Active Deals</div></div>
+    <div class="card"><div id="sum-points" class="value">0</div><div class="label">Total Points</div></div>
+    <div class="card"><div id="sum-risk" class="value">0</div><div class="label">At-Risk Deals</div></div>
+  </div>
 
-    // 2. Tab Logic
-    function showView(event, viewId) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.getElementById(viewId).classList.add('active');
-      event.currentTarget.classList.add('active');
+  <div id="my-book" class="view active">
+    <table id="my-deals-table">
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>Customer</th>
+          <th>Size</th>
+          <th>SIS</th>
+          <th>Health</th>
+          <th>Adjustments</th>
+          <th>Total Points</th>
+        </tr>
+      </thead>
+      <tbody id="my-deals-body"></tbody>
+    </table>
+  </div>
+
+  <div id="territory" class="view">
+    <div class="toggle-bar">
+      <button onclick="toggleLayout('territory', 'grid')">Card View</button>
+      <button onclick="toggleLayout('territory', 'list')">List View</button>
+      <button onclick="sortIMs('territory', 'asc')">Sort Tier Asc</button>
+      <button onclick="sortIMs('territory', 'desc')">Sort Tier Desc</button>
+    </div>
+    <div id="territory-container" class="im-grid-view"></div>
+  </div>
+
+  <div id="total-workload" class="view">
+    <div class="sub-tabs">
+      <div class="sub-tab active" onclick="showSubTab('workload-main')">Full Team View</div>
+      <div class="sub-tab" onclick="showSubTab('strategic-review')">Strategic Assignment Review</div>
+    </div>
+    
+    <div id="workload-main" class="sub-view">
+      <div class="toggle-bar">
+        <button onclick="toggleLayout('workload', 'grid')">Card View</button>
+        <button onclick="toggleLayout('workload', 'list')">List View</button>
+      </div>
+      <div id="workload-container" class="im-grid-view"></div>
+    </div>
+
+    <div id="strategic-review" class="sub-view" style="display:none;">
+      <h3>Strategic Review Workflow</h3>
+      <div class="card" style="border-left: 5px solid var(--ps-blue);">
+        <strong>Unassigned Enterprise: Riverside Consolidated</strong><br>
+        <p>Size: Enterprise (15) | SIS: PowerSchool (3) | Adjustments: Pilot (+1)</p>
+        <p>Suggested IM: <strong>Alex R.</strong> (Current Capacity: 65%)</p>
+        <button style="background: var(--ps-green); color: white; border:none; padding: 5px 15px; border-radius:4px;">Approve Assignment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAGES = ["Inbound", "Kickoff", "Setup", "Feature Enablement", "Platform Ready", "Monitor", "End of Implementation", "On Hold", "Stalled"];
+const SIZE_PTS = { "Small": 1, "Medium": 3, "Large": 5, "Enterprise": 10 };
+const SIS_PTS = { "PowerSchool": 3, "Infinite Campus": 3, "Aeries": 2, "Skyward": 2, "Other": 1 };
+
+let myDeals = [
+  { stage: "Inbound", name: "District A", size: "Medium", sis: "PowerSchool", health: "yellow", adj: ["Pilot"] },
+  { stage: "Kickoff", name: "Charter B", size: "Large", sis: "Infinite Campus", health: "red", adj: ["Extended Launch"] },
+  { stage: "Setup", name: "Unified C", size: "Small", sis: "Aeries", health: "green", adj: [] },
+  { stage: "Feature Enablement", name: "Academy D", size: "Large", sis: "PowerSchool", health: "green", adj: ["Complex Migration", "Training+"] },
+  { stage: "Platform Ready", name: "County E", size: "Enterprise", sis: "Skyward", health: "green", adj: [] },
+  { stage: "Monitor", name: "City Schools F", size: "Medium", sis: "Other", health: "yellow", adj: ["Pilot"] },
+  { stage: "End of Implementation", name: "District G", size: "Small", sis: "Aeries", health: "green", adj: [] },
+  { stage: "Stalled", name: "Lakeside H", size: "Large", sis: "Infinite Campus", health: "red", adj: ["Stalled Admin"] },
+  { stage: "Setup", name: "Regional I", size: "Medium", sis: "Skyward", health: "green", adj: [] },
+  { stage: "Inbound", name: "Global J", size: "Enterprise", sis: "PowerSchool", health: "yellow", adj: ["Custom Dev"] },
+  { stage: "Platform Ready", name: "Southside K", size: "Large", sis: "Other", health: "green", adj: [] },
+  { stage: "Kickoff", name: "Northshore L", size: "Medium", sis: "Aeries", health: "green", adj: ["Training+"] }
+];
+
+let ims = [
+  { name: "Alex R.", tier: 3, points: 42, notes: "" },
+  { name: "Jordan M.", tier: 2, points: 35, notes: "" },
+  { name: "Taylor B.", tier: 1, points: 15, notes: "" },
+  { name: "Casey S.", tier: 3, points: 48, notes: "" },
+  { name: "Morgan L.", tier: 2, points: 20, notes: "" },
+  { name: "Riley W.", tier: 1, points: 10, notes: "" },
+  { name: "Skyler P.", tier: 3, points: 30, notes: "" }
+];
+
+// Add 15 more for total workload
+for(let i=1; i<=15; i++) {
+  ims.push({ name: `IM Expert ${i}`, tier: Math.floor(Math.random()*3)+1, points: Math.floor(Math.random()*50), notes: "" });
+}
+
+function showTab(tabId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showSubTab(subId) {
+  document.querySelectorAll('.sub-view').forEach(v => v.style.display = 'none');
+  document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(subId).style.display = 'block';
+  event.target.classList.add('active');
+}
+
+function calculatePoints(deal) {
+  let pts = (SIZE_PTS[deal.size] || 0) + (SIS_PTS[deal.sis] || 0) + deal.adj.length;
+  return pts;
+}
+
+function renderMyDeals() {
+  const body = document.getElementById('my-deals-body');
+  body.innerHTML = '';
+  let totalPoints = 0;
+  let riskCount = 0;
+
+  myDeals.sort((a, b) => STAGES.indexOf(a.stage) - STAGES.indexOf(b.stage));
+
+  let lastStage = "";
+  myDeals.forEach(deal => {
+    if (lastStage !== "" && lastStage !== deal.stage) {
+      const spacer = document.createElement('tr');
+      spacer.innerHTML = `<td colspan="7" class="stage-spacer"></td>`;
+      body.appendChild(spacer);
     }
+    
+    const pts = calculatePoints(deal);
+    totalPoints += pts;
+    if(deal.health === 'red' || deal.health === 'yellow') riskCount++;
 
-    // 3. Render Dashboard
-    function renderDashboard() {
-      const dealsBody = document.getElementById('deals-body');
-      const imGrid = document.getElementById('im-grid');
-      let grandTotalPoints = 0;
-      let totalDeals = 0;
-      let capacitySum = 0;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="stage-header">${deal.stage}</td>
+      <td><strong>${deal.name}</strong></td>
+      <td>${deal.size} (${SIZE_PTS[deal.size]})</td>
+      <td>${deal.sis} (${SIS_PTS[deal.sis]})</td>
+      <td><span class="pill ${deal.health}">${deal.health}</span></td>
+      <td class="adj-container">
+        <span class="adj-trigger" onclick="this.nextElementSibling.classList.toggle('open')">${deal.adj.join(', ') || 'None'}</span>
+        <div class="adj-content">
+          <label><input type="checkbox" checked> Pilot (+1)</label><br>
+          <label><input type="checkbox"> Extended Launch (+1)</label>
+        </div>
+      </td>
+      <td><strong>${pts}</strong></td>
+    `;
+    body.appendChild(row);
+    lastStage = deal.stage;
+  });
 
-      dealsBody.innerHTML = '';
-      imGrid.innerHTML = '';
+  document.getElementById('sum-deals').innerText = myDeals.length;
+  document.getElementById('sum-points').innerText = totalPoints;
+  document.getElementById('sum-risk').innerText = riskCount;
+}
 
-      teamData.ims.forEach(im => {
-        let imPoints = 0;
-        
-        // Process Deals for "My View" (Using Alex R as 'Current User' for example)
-        im.deals.forEach(deal => {
-          imPoints += deal.points;
-          totalDeals++;
-          
-          if(im.name === "Alex R.") {
-            dealsBody.innerHTML += `
-              <tr>
-                <td>${deal.name}</td>
-                <td>${deal.size}</td>
-                <td>${deal.sis}</td>
-                <td><span class="pill ${deal.health}">${deal.health}</span></td>
-                <td>${deal.points}</td>
-              </tr>`;
-          }
-        });
+function renderIMs(containerId, dataList) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  
+  dataList.forEach(im => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <strong>${im.name}</strong> <span class="pill" style="background:#eee">Tier ${im.tier}</span>
+      <div class="label">Points: ${im.points}</div>
+      <div class="progress-container">
+        <div class="marker yellow-cap"></div>
+        <div class="marker red-cap"></div>
+        <div class="progress">
+          <div class="progress-bar" style="width: ${(im.points/60)*100}%; background: var(--ps-green);"></div>
+        </div>
+      </div>
+      <textarea placeholder="Add notes...">${im.notes}</textarea>
+    `;
+    container.appendChild(card);
+  });
+}
 
-        // Process IM Cards for "Territory View"
-        const capPct = Math.round((imPoints / im.maxPoints) * 100);
-        capacitySum += capPct;
-        grandTotalPoints += imPoints;
-
-        const barColor = capPct > 90 ? 'var(--ps-red)' : (capPct > 70 ? 'var(--ps-gold)' : 'var(--ps-green)');
-
-        imGrid.innerHTML += `
-          <div class="card">
-            <strong>${im.name}</strong> <span class="tier-badge">Tier ${im.tier}</span>
-            <div class="label">Points: ${imPoints} / ${im.maxPoints}</div>
-            <div class="progress-container">
-              <div class="progress">
-                <div class="progress-bar" style="width: ${capPct}%; background: ${barColor};"></div>
-              </div>
-              <div class="label" style="text-align:right; font-size:10px; margin-top:4px;">${capPct}% Capacity</div>
-            </div>
-          </div>`;
-      });
-
-      // Update Header Summary
-      document.getElementById('total-deals').innerText = totalDeals;
-      document.getElementById('total-points').innerText = grandTotalPoints;
-      document.getElementById('avg-capacity').innerText = Math.round(capacitySum / teamData.ims.length) + '%';
+function sortIMs(view, direction) {
+  let list = [...ims];
+  if (view === 'territory') list = list.slice(0, 7);
+  
+  list.sort((a, b) => {
+    if (a.tier !== b.tier) {
+      return direction === 'asc' ? a.tier - b.tier : b.tier - a.tier;
     }
+    return a.name.localeCompare(b.name);
+  });
+  
+  renderIMs(view === 'territory' ? 'territory-container' : 'workload-container', list);
+}
 
-    // Initialize
-    renderDashboard();
-  </script>
+function toggleLayout(view, type) {
+  const container = document.getElementById(view + '-container');
+  container.className = type === 'list' ? 'im-list-view' : 'im-grid-view';
+}
+
+// Initial Run
+renderMyDeals();
+renderIMs('territory-container', ims.slice(0, 7));
+renderIMs('workload-container', ims);
+</script>
+
 </body>
 </html>
