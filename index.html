@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ParentSquare IM Dashboard - My Book</title>
+  <title>ParentSquare IM Dashboard - Evan Tambini</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -32,7 +32,8 @@
     .tab { padding-bottom: 12px; cursor: pointer; font-weight: 600; color: #666; }
     .tab.active { color: var(--ps-green); border-bottom: 4px solid var(--ps-green); }
 
-    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    /* Summary Section - Updated Order [cite: 119-131] */
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
     .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--ps-green); }
     .card .value { font-size: 28px; font-weight: 700; color: var(--ps-dark-green); }
     .card .label { font-size: 13px; color: #666; margin-top: 4px; font-weight: 600; }
@@ -44,11 +45,13 @@
     .stage-group-header { background: var(--ps-light-green); font-weight: 700; color: var(--ps-dark-green); padding: 8px 12px; font-size: 11px; text-transform: uppercase; }
     .stage-spacer { height: 15px; background: var(--ps-light-gray); }
 
+    /* Adjustment Display Logic  */
     .adj-wrapper { position: relative; }
     .adj-btn { background: #fff; border: 1px solid #ccc; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; text-align: left; display: flex; justify-content: space-between; }
+    .adj-display { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; font-size: 10px; font-weight: 600; color: var(--ps-blue); }
+    .adj-display.vertical { flex-direction: column; gap: 2px; }
     .adj-dropdown { display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ddd; padding: 10px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 220px; border-radius: 4px; }
     .adj-dropdown.active { display: block; }
-    .adj-option { display: block; margin-bottom: 6px; font-size: 11px; cursor: pointer; }
 
     .pill { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-block; }
     .red { background: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
@@ -79,9 +82,9 @@
 
   <div class="summary">
     <div class="card"><div id="stat-deals" class="value">0</div><div class="label">Active Deals</div></div>
-    <div class="card"><div id="stat-points" class="value">0</div><div class="label">Total Points</div></div>
-    <div class="card"><div id="stat-risk" class="value">0</div><div class="label">At-Risk Deals</div></div>
+    <div class="card"><div id="stat-points" class="value">0 <span style="font-size: 14px; font-weight: 400;">(out of <span id="max-pts">0</span>)</span></div><div class="label">Total Points</div></div>
     <div class="card"><div id="stat-cap" class="value">0%</div><div class="label">Capacity Used (<span id="cur-tier">TBD</span>)</div></div>
+    <div class="card"><div id="stat-risk" class="value">0</div><div class="label">At-Risk Deals</div></div>
   </div>
 
   <div id="view-my-book" class="view active">
@@ -107,10 +110,11 @@
 </div>
 
 <script>
-// Logic derived from Proposal & User Instructions
-const CURRENT_IM_TIER = "T3"; // Mock-up setting for current user
+// IM Capacity Logic [cite: 122-131]
+const CURRENT_IM_TIER = "T3"; 
 const MPC_VALUES = { "T1": 70, "T2": 90, "T3": 120, "T4": 120, "T5": 90 };
 
+// Scoring Logic [cite: 66-117]
 const SIS_PTS = { "PowerSchool": 3, "One Roster SFTP": 3, "Infinite Campus": 2, "Aeries": 2, "Skyward SFTP": 2, "Clever": 2, "RenWeb/FACTS": 1, "Aequitas": 2, "Generic SFTP": 1 };
 const SIZE_PTS = { "Single": 1, "Small": 1, "Medium": 3, "Large": 2, "Enterprise": 2, "Strategic": 4 };
 const HEALTH_PTS = { "green": 0, "yellow": 1, "red": 2 };
@@ -120,7 +124,7 @@ const ADJ_OPTIONS = ["Extended Launch", "Proof of Concept", "Pilots", "DSAs/DUAs
 let myDeals = [
   { id: 1, stage: "Inbound", name: "Oak Unified", size: "Strategic", sis: "PowerSchool", health: "green", adj: ["Pilots"] },
   { id: 2, stage: "Kickoff", name: "Maple Academy", size: "Medium", sis: "Aeries", health: "yellow", adj: [] },
-  { id: 3, stage: "Setup", name: "Pine Charter", size: "Small", sis: "Skyward SFTP", health: "red", adj: ["DSAs/DUAs/DPAs"] },
+  { id: 3, stage: "Setup", name: "Pine Charter", size: "Small", sis: "Skyward SFTP", health: "red", adj: ["DSAs/DUAs/DPAs", "DOEs", "Pilots"] },
   { id: 4, stage: "Feature Enablement", name: "Willow Creek", size: "Large", sis: "Infinite Campus", health: "yellow", adj: ["Extended Launch"] },
   { id: 5, stage: "Platform Ready", name: "Birch District", size: "Strategic", sis: "One Roster SFTP", health: "green", adj: [] },
   { id: 6, stage: "Monitor", name: "Cedar Heights", size: "Medium", sis: "Generic SFTP", health: "green", adj: [] },
@@ -129,7 +133,7 @@ let myDeals = [
   { id: 9, stage: "Monitor", name: "Linden Academy", size: "Small", sis: "Aeries", health: "green", adj: [] },
   { id: 10, stage: "Platform Ready", name: "Ash Regional", size: "Large", sis: "PowerSchool", health: "yellow", adj: [] },
   { id: 11, stage: "Setup", name: "Cypress Unified", size: "Medium", sis: "Skyward SFTP", health: "green", adj: [] },
-  { id: 12, stage: "On Hold", name: "Palm Groves", size: "Large", sis: "Infinite Campus", health: "red", adj: ["DOEs"] }
+  { id: 12, stage: "On Hold", name: "Palm Groves", size: "Large", sis: "Infinite Campus", health: "red", adj: ["DOEs", "Extended Launch"] }
 ];
 
 function calculateTotalPoints(deal) {
@@ -171,12 +175,15 @@ function renderDashboard() {
       <td><span class="pill ${deal.health}">${deal.health} (${HEALTH_PTS[deal.health]})</span></td>
       <td>
         <div class="adj-wrapper">
+          <div class="adj-display ${deal.adj.length > 2 ? 'vertical' : ''}">
+            ${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}
+          </div>
           <div class="adj-btn" onclick="document.getElementById('adj-menu-${deal.id}').classList.toggle('active')">
-            <span>${deal.adj.length > 0 ? deal.adj.join(', ') : 'Add Adjustments'}</span>
+            <span>Manage Adjustments</span>
             <span>▼</span>
           </div>
           <div class="adj-dropdown" id="adj-menu-${deal.id}">
-            ${ADJ_OPTIONS.map(opt => `<label class="adj-option"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt} (+1)</label>`).join('')}
+            ${ADJ_OPTIONS.map(opt => `<label class="adj-option" style="display:block; margin-bottom:5px;"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt}</label>`).join('')}
           </div>
         </div>
       </td>
@@ -187,7 +194,8 @@ function renderDashboard() {
 
   const mpc = MPC_VALUES[CURRENT_IM_TIER];
   document.getElementById('stat-deals').innerText = myDeals.length;
-  document.getElementById('stat-points').innerText = totalPoints;
+  document.getElementById('stat-points').firstChild.textContent = totalPoints + " ";
+  document.getElementById('max-pts').innerText = mpc;
   document.getElementById('stat-risk').innerText = riskCount;
   document.getElementById('stat-cap').innerText = Math.round((totalPoints / mpc) * 100) + '%';
   document.getElementById('cur-tier').innerText = CURRENT_IM_TIER;
