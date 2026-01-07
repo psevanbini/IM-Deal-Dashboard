@@ -54,19 +54,30 @@
     .adj-dropdown { display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ddd; padding: 10px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 220px; border-radius: 4px; }
     .adj-dropdown.active { display: block; }
 
+    /* Territory Styles */
     .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; }
     .btn-action { background: white; border: 1px solid #ddd; padding: 8px 16px; cursor: pointer; font-size: 12px; font-weight: 600; border-radius: 4px; }
     .btn-action.active { background: var(--ps-green); color: white; border-color: var(--ps-green); }
 
-    .im-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .tier-section-header { background: #eef1f5; padding: 10px 20px; margin: 20px 0 10px 0; border-radius: 4px; font-weight: 700; color: var(--ps-dark-gray); border-left: 5px solid var(--ps-dark-green); }
+
+    .im-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
     .im-list { display: flex; flex-direction: column; gap: 10px; }
     .im-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-left: 5px solid var(--ps-green); position: relative; }
 
-    .progress-track { height: 12px; background: #eee; border-radius: 6px; position: relative; overflow: hidden; }
-    .progress-fill { height: 100%; transition: width 0.6s ease; }
-    .marker { position: absolute; top: -5px; width: 2px; height: 22px; background: #bbb; z-index: 2; }
-    .marker-label { position: absolute; top: -18px; font-size: 9px; font-weight: 700; color: #999; transform: translateX(-50%); }
-    textarea { width: 100%; height: 50px; margin-top: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; padding: 8px; color: #555; }
+    .im-stats-row { display: flex; gap: 15px; margin: 8px 0; font-size: 12px; font-weight: 600; }
+    
+    /* Progress Bar with Multiple Markers */
+    .capacity-container { margin: 25px 0 15px 0; position: relative; }
+    .progress-track { height: 14px; background: #eee; border-radius: 7px; position: relative; overflow: visible; }
+    .progress-fill { height: 100%; transition: width 0.6s ease; border-radius: 7px; }
+    
+    .marker { position: absolute; top: 0px; width: 1px; height: 25px; background: #bbb; z-index: 2; }
+    .marker-label { position: absolute; top: -22px; font-size: 8px; font-weight: 700; color: #777; transform: translateX(-50%); text-align: center; }
+    
+    .note-container { margin-top: 15px; position: relative; }
+    textarea { width: 100%; height: 60px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; padding: 8px; color: #555; resize: none; }
+    .btn-save { display: block; margin-top: 5px; background: var(--ps-blue); color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; float: right; }
 
     .pill { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-block; }
     .red { background: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
@@ -121,12 +132,12 @@
     <div class="controls">
       <h2 style="color: var(--ps-dark-green); margin: 0;">Territory Load Overview</h2>
       <div class="control-group">
-        <button id="sort-toggle" class="btn-action" onclick="toggleTierSort()">Sort: Tier (Desc) ↑↓</button>
+        <button id="sort-toggle" class="btn-action" onclick="toggleTierSort()">Sort: Tier (DESC) ↑↓</button>
         <button id="btn-grid" class="btn-action active" onclick="setLayout('grid')">Card View</button>
         <button id="btn-list" class="btn-action" onclick="setLayout('list')">List View</button>
       </div>
     </div>
-    <div id="territory-display" class="im-grid"></div>
+    <div id="territory-display"></div>
   </div>
 
   <footer>© 2026 ParentSquare • Implementation Manager Dashboard • Evan Tambini</footer>
@@ -159,14 +170,14 @@ let myDeals = [
 ];
 
 let territoryIMs = [
-  { name: "Alex R.", tier: "T4", currentPoints: 105, dealsCount: 12, riskCount: 2, notes: "Managing large district launch." },
+  { name: "Alex R.", tier: "T4", currentPoints: 105, dealsCount: 12, riskCount: 2, notes: "" },
   { name: "Jordan M.", tier: "T2", currentPoints: 65, dealsCount: 8, riskCount: 1, notes: "" },
-  { name: "Casey S.", tier: "T3", currentPoints: 45, dealsCount: 6, riskCount: 0, notes: "Available for new assignments." },
-  { name: "Morgan L.", tier: "T1", currentPoints: 68, dealsCount: 9, riskCount: 3, notes: "Near cap for T1." },
+  { name: "Casey S.", tier: "T3", currentPoints: 45, dealsCount: 6, riskCount: 0, notes: "" },
+  { name: "Morgan L.", tier: "T1", currentPoints: 68, dealsCount: 9, riskCount: 3, notes: "" },
   { name: "Riley W.", tier: "T2", currentPoints: 88, dealsCount: 10, riskCount: 2, notes: "" },
   { name: "Skyler P.", tier: "T5", currentPoints: 40, dealsCount: 5, riskCount: 0, notes: "" },
-  { name: "Taylor B.", tier: "T3", currentPoints: 115, dealsCount: 14, riskCount: 4, notes: "Red Zone." },
-  { name: "Quinn J.", tier: "T1", currentPoints: 30, dealsCount: 4, riskCount: 0, notes: "New hire training." }
+  { name: "Taylor B.", tier: "T3", currentPoints: 115, dealsCount: 14, riskCount: 4, notes: "" },
+  { name: "Quinn J.", tier: "T1", currentPoints: 30, dealsCount: 4, riskCount: 0, notes: "" }
 ];
 
 function switchView(tabId) {
@@ -185,35 +196,23 @@ function calculateTotalPoints(deal) {
 }
 
 function updateMetrics() {
-  let deals = 0, points = 0, risk = 0, maxPts = 0, capPct = 0;
-
+  let deals = 0, points = 0, risk = 0, maxPts = 0;
   if (CURRENT_VIEW.active === 'my-book') {
-    myDeals.forEach(d => {
-      points += calculateTotalPoints(d);
-      if (d.health !== 'green') risk++;
-    });
+    myDeals.forEach(d => { points += calculateTotalPoints(d); if (d.health !== 'green') risk++; });
     deals = myDeals.length;
     maxPts = MPC_VALUES["T3"];
-    capPct = Math.round((points / maxPts) * 100);
     document.getElementById('max-pts-container').style.display = 'inline';
     document.getElementById('tier-context').innerText = "(T3)";
   } else {
-    territoryIMs.forEach(im => {
-      deals += im.dealsCount;
-      points += im.currentPoints;
-      risk += im.riskCount;
-      maxPts += MPC_VALUES[im.tier];
-    });
-    capPct = Math.round((points / maxPts) * 100);
+    territoryIMs.forEach(im => { deals += im.dealsCount; points += im.currentPoints; risk += im.riskCount; maxPts += MPC_VALUES[im.tier]; });
     document.getElementById('max-pts-container').style.display = 'none';
     document.getElementById('tier-context').innerText = "(Team Avg)";
   }
-
   document.getElementById('stat-deals').innerText = deals;
   document.getElementById('stat-points').firstChild.textContent = points + " ";
   document.getElementById('max-pts').innerText = maxPts;
   document.getElementById('stat-risk').innerText = risk;
-  document.getElementById('stat-cap').innerText = capPct + '%';
+  document.getElementById('stat-cap').innerText = Math.round((points / maxPts) * 100) + '%';
 }
 
 function renderMyBook() {
@@ -221,7 +220,6 @@ function renderMyBook() {
   body.innerHTML = '';
   myDeals.sort((a, b) => STAGES.indexOf(a.stage) - STAGES.indexOf(b.stage));
   let currentStage = "";
-
   myDeals.forEach(deal => {
     if (deal.stage !== currentStage) {
       if (currentStage !== "") body.innerHTML += `<tr class="stage-spacer"><td colspan="7"></td></tr>`;
@@ -229,19 +227,7 @@ function renderMyBook() {
       currentStage = deal.stage;
     }
     const pts = calculateTotalPoints(deal);
-    body.innerHTML += `<tr>
-      <td>${deal.stage}</td>
-      <td><strong>${deal.name}</strong></td>
-      <td>${deal.size} (${SIZE_PTS[deal.size]})</td>
-      <td>${deal.sis} (${SIS_PTS[deal.sis]})</td>
-      <td><span class="pill ${deal.health}">${deal.health} (${HEALTH_PTS[deal.health]})</span></td>
-      <td><div class="adj-wrapper">
-        <div class="adj-display ${deal.adj.length > 2 ? 'vertical' : ''}">${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}</div>
-        <div class="adj-btn" onclick="document.getElementById('adj-menu-${deal.id}').classList.toggle('active')">Manage ▼</div>
-        <div class="adj-dropdown" id="adj-menu-${deal.id}">${ADJ_OPTIONS.map(opt => `<label class="adj-option"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt}</label>`).join('')}</div>
-      </div></td>
-      <td><strong>${pts}</strong></td>
-    </tr>`;
+    body.innerHTML += `<tr><td>${deal.stage}</td><td><strong>${deal.name}</strong></td><td>${deal.size} (${SIZE_PTS[deal.size]})</td><td>${deal.sis} (${SIS_PTS[deal.sis]})</td><td><span class="pill ${deal.health}">${deal.health} (${HEALTH_PTS[deal.health]})</span></td><td><div class="adj-wrapper"><div class="adj-display ${deal.adj.length > 2 ? 'vertical' : ''}">${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}</div><div class="adj-btn" onclick="document.getElementById('adj-menu-${deal.id}').classList.toggle('active')">Manage ▼</div><div class="adj-dropdown" id="adj-menu-${deal.id}">${ADJ_OPTIONS.map(opt => `<label class="adj-option"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt}</label>`).join('')}</div></div></td><td><strong>${pts}</strong></td></tr>`;
   });
 }
 
@@ -249,14 +235,7 @@ function updateAdj(id, opt) {
   const d = myDeals.find(x => x.id === id);
   const idx = d.adj.indexOf(opt);
   idx > -1 ? d.adj.splice(idx, 1) : d.adj.push(opt);
-  renderMyBook();
-  updateMetrics();
-}
-
-function setLayout(m) {
-  document.getElementById('territory-display').className = m === 'grid' ? 'im-grid' : 'im-list';
-  document.getElementById('btn-grid').classList.toggle('active', m === 'grid');
-  document.getElementById('btn-list').classList.toggle('active', m === 'list');
+  renderMyBook(); updateMetrics();
 }
 
 function toggleTierSort() {
@@ -265,32 +244,60 @@ function toggleTierSort() {
   renderTerritory();
 }
 
+function setLayout(m) {
+  const display = document.getElementById('territory-display');
+  display.classList.remove('im-grid', 'im-list');
+  display.classList.add(m === 'grid' ? 'im-grid' : 'im-list');
+  document.getElementById('btn-grid').classList.toggle('active', m === 'grid');
+  document.getElementById('btn-list').classList.toggle('active', m === 'list');
+}
+
 function renderTerritory() {
   const display = document.getElementById('territory-display');
+  display.innerHTML = '';
   const sorted = [...territoryIMs].sort((a, b) => {
-    const tierComp = tierSortDir === 'desc' ? b.tier.localeCompare(a.tier) : a.tier.localeCompare(b.tier);
-    return tierComp !== 0 ? tierComp : a.name.localeCompare(b.name);
+    const tComp = tierSortDir === 'desc' ? b.tier.localeCompare(a.tier) : a.tier.localeCompare(b.tier);
+    return tComp !== 0 ? tComp : a.name.localeCompare(b.name);
   });
 
-  display.innerHTML = sorted.map(im => {
+  let currentTier = "";
+  let sectionDiv;
+
+  sorted.forEach(im => {
+    if (im.tier !== currentTier) {
+      currentTier = im.tier;
+      const header = document.createElement('div');
+      header.className = 'tier-section-header';
+      header.innerText = `Tier ${currentTier.replace('T','')}`;
+      display.appendChild(header);
+      sectionDiv = document.createElement('div');
+      sectionDiv.className = document.getElementById('btn-grid').classList.contains('active') ? 'im-grid' : 'im-list';
+      display.appendChild(sectionDiv);
+    }
+
     const mpc = MPC_VALUES[im.tier], cap = Math.round((im.currentPoints / mpc) * 100);
-    const color = cap >= 90 ? 'var(--ps-red)' : (cap >= 70 ? 'var(--ps-gold)' : 'var(--ps-green)');
-    return `<div class="im-card">
-      <div class="im-header"><strong>${im.name}</strong> <span class="pill green" style="font-size:9px;">${im.tier}</span></div>
-      <div style="font-size:11px; margin:5px 0;">Points: ${im.currentPoints}/${mpc}</div>
+    const color = cap >= 90 ? 'var(--ps-red)' : (cap >= 75 ? 'var(--ps-gold)' : 'var(--ps-green)');
+    
+    const card = document.createElement('div');
+    card.className = 'im-card';
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;"><strong>${im.name}</strong> <span class="pill green" style="font-size:9px;">${im.tier}</span></div>
+      <div class="im-stats-row"><span>📋 Deals: ${im.dealsCount}</span> <span style="color:${im.riskCount > 0 ? 'var(--ps-red)' : 'inherit'}">⚠️ Risk: ${im.riskCount}</span></div>
+      <div style="font-size:11px; margin:5px 0;">Points: <strong>${im.currentPoints}</strong> / ${mpc}</div>
       <div class="capacity-container">
-        <div class="marker-label" style="left:70%">70%</div><div class="marker" style="left:70%"></div>
-        <div class="marker-label" style="left:90%">90%</div><div class="marker" style="left:90%"></div>
+        <div class="marker-label" style="left:25%">25%<br>(${Math.round(mpc*0.25)})</div><div class="marker" style="left:25%"></div>
+        <div class="marker-label" style="left:50%">50%<br>(${Math.round(mpc*0.5)})</div><div class="marker" style="left:50%"></div>
+        <div class="marker-label" style="left:75%">75%<br>(${Math.round(mpc*0.75)})</div><div class="marker" style="left:75%"></div>
+        <div class="marker-label" style="left:90%">90%<br>(${Math.round(mpc*0.9)})</div><div class="marker" style="left:90%"></div>
         <div class="progress-track"><div class="progress-fill" style="width:${cap}%; background:${color}"></div></div>
       </div>
-      <textarea placeholder="Notes...">${im.notes}</textarea>
-    </div>`;
-  }).join('');
+      <div class="note-container"><textarea placeholder="Notes...">${im.notes}</textarea><button class="btn-save" onclick="this.innerText='Saved!'; setTimeout(()=>this.innerText='Save', 2000)">Save</button></div>`;
+    sectionDiv.appendChild(card);
+  });
 }
 
 window.onclick = e => { if (!e.target.closest('.adj-wrapper')) document.querySelectorAll('.adj-dropdown').forEach(d => d.classList.remove('active')); };
-updateMetrics();
-renderMyBook();
+updateMetrics(); renderMyBook();
 </script>
 </body>
 </html>
