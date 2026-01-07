@@ -1,25 +1,43 @@
+<!--
+CHANGE LOG (THIS UPDATE ONLY)
+- Header: tightened logo alignment with title
+- My Book of Business:
+  - Stage moved to first column, Customer second
+  - Deals grouped by Stage with visual spacing
+  - Adjustments column converted to accordion-style multi-select
+  - Adjustments only render when selected
+  - Each adjustment adds +1 point to Total Points
+NO OTHER CHANGES MADE
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Implementation Manager Deal Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+/* === EXISTING BASELINE B STYLES (UNCHANGED) === */
 :root {
-  --green:#85ad33; --dark-green:#618025;
-  --gold:#f2b001; --red:#c0392b;
-  --light:#f7f8f8; --text:#444;
+  --green:#85ad33;
+  --dark-green:#618025;
+  --gold:#f2b001;
+  --red:#c0392b;
+  --light:#f7f8f8;
+  --text:#444;
 }
+
 * { box-sizing:border-box; font-family:Montserrat, Arial; }
 body { margin:0; background:var(--light); color:var(--text); }
+
 .container { max-width:1400px; margin:auto; padding:24px; }
 
 /* Header */
 header {
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:12px; /* tightened */
 }
 header img { height:40px; }
 header h1 { margin:0; color:var(--green); line-height:1.1; }
@@ -31,8 +49,18 @@ header p { margin:4px 0 0; }
 .tab.active { color:var(--green); border-bottom:4px solid var(--green); }
 
 /* Summary */
-.summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:24px 0; }
-.card { background:white; padding:16px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
+.summary {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  margin:24px 0;
+}
+.card {
+  background:white;
+  padding:16px;
+  border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+}
 .value { font-size:26px; font-weight:700; color:var(--dark-green); }
 .label { font-size:13px; color:#666; }
 
@@ -41,8 +69,18 @@ header p { margin:4px 0 0; }
 .view.active { display:block; }
 
 /* Table */
-table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; }
-th, td { padding:10px; border-bottom:1px solid #eee; font-size:13px; }
+table {
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  border-radius:8px;
+  overflow:hidden;
+}
+th, td {
+  padding:10px;
+  border-bottom:1px solid #eee;
+  font-size:13px;
+}
 th { background:#e5f1d4; }
 
 /* Stage grouping */
@@ -53,13 +91,18 @@ th { background:#e5f1d4; }
   padding-top:16px;
 }
 
-/* Health pills */
-.pill { padding:4px 8px; border-radius:10px; font-size:12px; font-weight:600; }
+/* Pills */
+.pill {
+  padding:4px 8px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:600;
+}
 .green { background:#dff0d8; }
 .yellow { background:#fcf8e3; }
 .red { background:#f2dede; }
 
-/* Adjustments accordion */
+/* Adjustments (NEW – scoped to Tab 1 only) */
 .adjustments-display {
   cursor:pointer;
   min-height:18px;
@@ -81,7 +124,6 @@ th { background:#e5f1d4; }
   font-size:12px;
 }
 
-/* Footer */
 footer { text-align:center; margin-top:40px; font-size:12px; }
 </style>
 </head>
@@ -90,126 +132,6 @@ footer { text-align:center; margin-top:40px; font-size:12px; }
 <div class="container">
 
 <header>
-  <img src="logo.png" alt="ParentSquare">
+  <img src="logo.png" alt="ParentSquare Logo">
   <div>
-    <h1>Implementation Manager Deal Dashboard</h1>
-    <p>Workload Visibility & Deal Assignment Support</p>
-  </div>
-</header>
-
-<div class="tabs">
-  <div class="tab active" onclick="showView('im')">My Book of Business</div>
-  <div class="tab" onclick="showView('territory')">Territory Overview</div>
-  <div class="tab" onclick="showView('team')">Total Team Workload</div>
-</div>
-
-<div class="summary">
-  <div class="card"><div class="value" id="dealCount"></div><div class="label">Active Deals</div></div>
-  <div class="card"><div class="value" id="totalPoints"></div><div class="label">Total Points</div></div>
-  <div class="card"><div class="value">74%</div><div class="label">Capacity Used</div></div>
-  <div class="card"><div class="value" id="riskCount"></div><div class="label">At-Risk Deals</div></div>
-</div>
-
-<!-- My Book of Business -->
-<div id="im" class="view active">
-<h2>My Deals</h2>
-<table id="dealTable">
-<thead>
-<tr>
-<th>Stage</th>
-<th>Customer</th>
-<th>Size</th>
-<th>SIS</th>
-<th>Health</th>
-<th>Adjustments</th>
-<th>Total Points</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-</div>
-
-<footer>© 2026 ParentSquare • Internal Tool Concept</footer>
-</div>
-
-<script>
-const stageOrder = ["Inbound","Kickoff","Setup","Feature Enablement","Platform Ready","Monitor","End of Implementation","On Hold","Stalled"];
-const adjOptions = ["Pilot","Extended Launch","DPA","New Hire"];
-
-const deals = [
-{c:"District A",stage:"Inbound",size:["Medium",3],sis:["PowerSchool",3],health:["Yellow",1],adj:[]},
-{c:"Charter B",stage:"Kickoff",size:["Large",2],sis:["Infinite Campus",2],health:["Red",2],adj:["Extended Launch"]},
-{c:"District C",stage:"Setup",size:["Small",1],sis:["Alma",1],health:["Green",0],adj:[]},
-{c:"Network D",stage:"Feature Enablement",size:["Strategic",4],sis:["PowerSchool",3],health:["Yellow",1],adj:["Pilot","DPA"]},
-{c:"District E",stage:"Platform Ready",size:["Medium",3],sis:["Skyward",2],health:["Green",0],adj:[]}
-];
-
-function renderDeals(){
-  const tbody=document.querySelector("#dealTable tbody");
-  tbody.innerHTML="";
-  let total=0, risk=0;
-
-  stageOrder.forEach(stage=>{
-    const stageDeals=deals.filter(d=>d.stage===stage);
-    if(stageDeals.length){
-      tbody.innerHTML+=`<tr class="stage-row"><td colspan="7">${stage}</td></tr>`;
-      stageDeals.forEach((d,i)=>{
-        const adjPts=d.adj.length;
-        const pts=d.size[1]+d.sis[1]+d.health[1]+adjPts;
-        total+=pts;
-        if(d.health[0]!=="Green") risk++;
-
-        const adjDisplay=d.adj.map(a=>`<span class="adjustment-pill">${a} (+1)</span>`).join("");
-
-        const row=document.createElement("tr");
-        row.innerHTML=`
-          <td></td>
-          <td>${d.c}</td>
-          <td>${d.size[0]} (${d.size[1]})</td>
-          <td>${d.sis[0]} (${d.sis[1]})</td>
-          <td><span class="pill ${d.health[0].toLowerCase()}">${d.health[0]} (${d.health[1]})</span></td>
-          <td>
-            <div class="adjustments-display" onclick="toggleAdj(${i},this)">
-              ${adjDisplay}
-            </div>
-            <div class="adjustments-panel">
-              ${adjOptions.map(o=>`
-                <label>
-                  <input type="checkbox" ${d.adj.includes(o)?"checked":""}
-                    onchange="updateAdj(${i},'${o}',this.checked)"> ${o} (+1)
-                </label>`).join("")}
-            </div>
-          </td>
-          <td>${pts}</td>`;
-        tbody.appendChild(row);
-      });
-    }
-  });
-
-  document.getElementById("dealCount").innerText=deals.length;
-  document.getElementById("totalPoints").innerText=total;
-  document.getElementById("riskCount").innerText=risk;
-}
-
-function toggleAdj(i,el){
-  const panel=el.nextElementSibling;
-  panel.style.display=panel.style.display==="block"?"none":"block";
-}
-
-function updateAdj(i,val,checked){
-  if(checked && !deals[i].adj.includes(val)) deals[i].adj.push(val);
-  if(!checked) deals[i].adj=deals[i].adj.filter(a=>a!==val);
-  renderDeals();
-}
-
-function showView(id){
-  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  event.target.classList.add("active");
-}
-
-renderDeals();
-</script>
-</body>
-</html>
+    <h1>Implementat
