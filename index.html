@@ -15,56 +15,73 @@
 body { margin:0; background:var(--light); color:var(--text); }
 .container { max-width:1400px; margin:auto; padding:24px; }
 
-header { display:flex; gap:16px; align-items:center; }
-header img { height:42px; }
-h1 { margin:0; color:var(--green); }
+/* Header */
+header {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+header img { height:40px; }
+header h1 { margin:0; color:var(--green); line-height:1.1; }
+header p { margin:4px 0 0; }
+
+/* Tabs */
 .tabs { display:flex; gap:24px; margin-top:16px; border-bottom:2px solid #ddd; }
 .tab { cursor:pointer; padding-bottom:10px; font-weight:600; }
 .tab.active { color:var(--green); border-bottom:4px solid var(--green); }
 
+/* Summary */
 .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:24px 0; }
 .card { background:white; padding:16px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
-
 .value { font-size:26px; font-weight:700; color:var(--dark-green); }
 .label { font-size:13px; color:#666; }
 
+/* Views */
 .view { display:none; }
 .view.active { display:block; }
 
+/* Table */
 table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; }
 th, td { padding:10px; border-bottom:1px solid #eee; font-size:13px; }
 th { background:#e5f1d4; }
 
-select.adjustments {
-  width:100%;
-  border:none;
-  background:transparent;
-  font-size:13px;
+/* Stage grouping */
+.stage-row td {
+  background:#f0f5ea;
+  font-weight:600;
+  color:var(--dark-green);
+  padding-top:16px;
 }
 
+/* Health pills */
 .pill { padding:4px 8px; border-radius:10px; font-size:12px; font-weight:600; }
 .green { background:#dff0d8; }
 .yellow { background:#fcf8e3; }
 .red { background:#f2dede; }
 
-.toggle { margin:12px 0; }
-button { cursor:pointer; }
+/* Adjustments accordion */
+.adjustments-display {
+  cursor:pointer;
+  min-height:18px;
+}
+.adjustment-pill {
+  display:inline-block;
+  background:#eef3e6;
+  padding:3px 6px;
+  border-radius:8px;
+  font-size:12px;
+  margin-right:4px;
+}
+.adjustments-panel {
+  display:none;
+  margin-top:6px;
+}
+.adjustments-panel label {
+  display:block;
+  font-size:12px;
+}
 
-.im-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
-.list .card { display:flex; justify-content:space-between; align-items:center; }
-
-.progress { position:relative; height:8px; background:#eee; border-radius:4px; margin-top:8px; }
-.bar { height:100%; background:var(--green); }
-.marker { position:absolute; top:-4px; width:2px; height:16px; }
-.marker.yellow { left:70%; background:var(--gold); }
-.marker.red { left:90%; background:var(--red); }
-
-.note { width:100%; margin-top:8px; }
-
-.subtabs { display:flex; gap:16px; margin:16px 0; }
-.subtab { cursor:pointer; font-weight:600; }
-.subtab.active { color:var(--green); }
-
+/* Footer */
 footer { text-align:center; margin-top:40px; font-size:12px; }
 </style>
 </head>
@@ -99,8 +116,8 @@ footer { text-align:center; margin-top:40px; font-size:12px; }
 <table id="dealTable">
 <thead>
 <tr>
-<th>Customer</th>
 <th>Stage</th>
+<th>Customer</th>
 <th>Size</th>
 <th>SIS</th>
 <th>Health</th>
@@ -112,132 +129,86 @@ footer { text-align:center; margin-top:40px; font-size:12px; }
 </table>
 </div>
 
-<!-- Territory Overview -->
-<div id="territory" class="view">
-<h2>Territory Overview</h2>
-<div class="toggle">
-View:
-<button onclick="setLayout('territory','cards')">Cards</button>
-<button onclick="setLayout('territory','list')">List</button>
-Sort Tier:
-<button onclick="toggleTierSort()">Asc / Desc</button>
-</div>
-<div id="territoryIMs" class="im-grid"></div>
-</div>
-
-<!-- Total Team Workload -->
-<div id="team" class="view">
-<h2>Total Team Workload</h2>
-
-<div class="subtabs">
-  <div class="subtab active" onclick="showTeamSub('all')">All IMs</div>
-  <div class="subtab" onclick="showTeamSub('review')">Strategic Assignment Review</div>
-</div>
-
-<div id="teamAll">
-<div class="toggle">
-View:
-<button onclick="setLayout('team','cards')">Cards</button>
-<button onclick="setLayout('team','list')">List</button>
-Sort Tier:
-<button onclick="toggleTierSort()">Asc / Desc</button>
-</div>
-<div id="teamIMs" class="im-grid"></div>
-</div>
-
-<div id="teamReview" style="display:none;">
-<table>
-<thead>
-<tr><th>Customer</th><th>Size</th><th>Suggested IM</th><th>Action</th></tr>
-</thead>
-<tbody>
-<tr><td>Metro District</td><td>Strategic</td><td>Alex R.</td><td><button>Approve</button> <button>Hold</button></td></tr>
-<tr><td>Unified Network</td><td>Enterprise</td><td>Drew P.</td><td><button>Approve</button> <button>Hold</button></td></tr>
-</tbody>
-</table>
-</div>
-
-</div>
-
 <footer>© 2026 ParentSquare • Internal Tool Concept</footer>
-
 </div>
 
 <script>
-/* ---------- DEAL DATA ---------- */
 const stageOrder = ["Inbound","Kickoff","Setup","Feature Enablement","Platform Ready","Monitor","End of Implementation","On Hold","Stalled"];
+const adjOptions = ["Pilot","Extended Launch","DPA","New Hire"];
 
 const deals = [
 {c:"District A",stage:"Inbound",size:["Medium",3],sis:["PowerSchool",3],health:["Yellow",1],adj:[]},
 {c:"Charter B",stage:"Kickoff",size:["Large",2],sis:["Infinite Campus",2],health:["Red",2],adj:["Extended Launch"]},
 {c:"District C",stage:"Setup",size:["Small",1],sis:["Alma",1],health:["Green",0],adj:[]},
 {c:"Network D",stage:"Feature Enablement",size:["Strategic",4],sis:["PowerSchool",3],health:["Yellow",1],adj:["Pilot","DPA"]},
-{c:"District E",stage:"Platform Ready",size:["Medium",3],sis:["Skyward",2],health:["Green",0],adj:[]},
-{c:"Charter F",stage:"Monitor",size:["Small",1],sis:["FACTS",1],health:["Red",2],adj:["Extended Launch"]},
-{c:"District G",stage:"End of Implementation",size:["Large",2],sis:["Synergy",1],health:["Yellow",1],adj:[]},
-{c:"Network H",stage:"On Hold",size:["Medium",3],sis:["Genesis",1],health:["Green",0],adj:["Pilot"]},
-{c:"District I",stage:"Stalled",size:["Strategic",4],sis:["OneRoster",3],health:["Red",2],adj:["DPA"]},
-{c:"Charter J",stage:"Setup",size:["Medium",3],sis:["Aeries",2],health:["Yellow",1],adj:[]}
+{c:"District E",stage:"Platform Ready",size:["Medium",3],sis:["Skyward",2],health:["Green",0],adj:[]}
 ];
 
-const adjOptions = ["Pilot","Extended Launch","DPA","New Hire"];
-
-/* ---------- RENDER DEALS ---------- */
 function renderDeals(){
-const tbody = document.querySelector("#dealTable tbody");
-tbody.innerHTML="";
-let total=0, risk=0;
+  const tbody=document.querySelector("#dealTable tbody");
+  tbody.innerHTML="";
+  let total=0, risk=0;
 
-deals.sort((a,b)=>stageOrder.indexOf(a.stage)-stageOrder.indexOf(b.stage));
+  stageOrder.forEach(stage=>{
+    const stageDeals=deals.filter(d=>d.stage===stage);
+    if(stageDeals.length){
+      tbody.innerHTML+=`<tr class="stage-row"><td colspan="7">${stage}</td></tr>`;
+      stageDeals.forEach((d,i)=>{
+        const adjPts=d.adj.length;
+        const pts=d.size[1]+d.sis[1]+d.health[1]+adjPts;
+        total+=pts;
+        if(d.health[0]!=="Green") risk++;
 
-deals.forEach((d,i)=>{
-let adjPts=d.adj.length;
-let pts=d.size[1]+d.sis[1]+d.health[1]+adjPts;
-total+=pts;
-if(d.health[0]!=="Green") risk++;
+        const adjDisplay=d.adj.map(a=>`<span class="adjustment-pill">${a} (+1)</span>`).join("");
 
-let tr=document.createElement("tr");
-tr.innerHTML=`
-<td>${d.c}</td>
-<td>${d.stage}</td>
-<td>${d.size[0]} (${d.size[1]})</td>
-<td>${d.sis[0]} (${d.sis[1]})</td>
-<td><span class="pill ${d.health[0].toLowerCase()}">${d.health[0]} (${d.health[1]})</span></td>
-<td>
-<select multiple class="adjustments" onchange="updateAdj(${i},this)">
-${adjOptions.map(o=>`<option ${d.adj.includes(o)?"selected":""}>${o}</option>`).join("")}
-</select>
-</td>
-<td>${pts}</td>`;
-tbody.appendChild(tr);
-});
+        const row=document.createElement("tr");
+        row.innerHTML=`
+          <td></td>
+          <td>${d.c}</td>
+          <td>${d.size[0]} (${d.size[1]})</td>
+          <td>${d.sis[0]} (${d.sis[1]})</td>
+          <td><span class="pill ${d.health[0].toLowerCase()}">${d.health[0]} (${d.health[1]})</span></td>
+          <td>
+            <div class="adjustments-display" onclick="toggleAdj(${i},this)">
+              ${adjDisplay}
+            </div>
+            <div class="adjustments-panel">
+              ${adjOptions.map(o=>`
+                <label>
+                  <input type="checkbox" ${d.adj.includes(o)?"checked":""}
+                    onchange="updateAdj(${i},'${o}',this.checked)"> ${o} (+1)
+                </label>`).join("")}
+            </div>
+          </td>
+          <td>${pts}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+  });
 
-document.getElementById("dealCount").innerText=deals.length;
-document.getElementById("totalPoints").innerText=total;
-document.getElementById("riskCount").innerText=risk;
+  document.getElementById("dealCount").innerText=deals.length;
+  document.getElementById("totalPoints").innerText=total;
+  document.getElementById("riskCount").innerText=risk;
 }
 
-function updateAdj(i,el){
-deals[i].adj=[...el.selectedOptions].map(o=>o.value);
-renderDeals();
+function toggleAdj(i,el){
+  const panel=el.nextElementSibling;
+  panel.style.display=panel.style.display==="block"?"none":"block";
 }
 
-/* ---------- VIEW CONTROLS ---------- */
+function updateAdj(i,val,checked){
+  if(checked && !deals[i].adj.includes(val)) deals[i].adj.push(val);
+  if(!checked) deals[i].adj=deals[i].adj.filter(a=>a!==val);
+  renderDeals();
+}
+
 function showView(id){
-document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-document.getElementById(id).classList.add("active");
-event.target.classList.add("active");
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  event.target.classList.add("active");
 }
 
-function showTeamSub(id){
-document.getElementById("teamAll").style.display=id==="all"?"block":"none";
-document.getElementById("teamReview").style.display=id==="review"?"block":"none";
-document.querySelectorAll(".subtab").forEach(s=>s.classList.remove("active"));
-event.target.classList.add("active");
-}
-
-/* initial render */
 renderDeals();
 </script>
 </body>
