@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ParentSquare IM Dashboard</title>
+  <title>ParentSquare IM Dashboard - Evan Tambini</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -32,26 +32,44 @@
     .tab { padding-bottom: 12px; cursor: pointer; font-weight: 600; color: #666; }
     .tab.active { color: var(--ps-green); border-bottom: 4px solid var(--ps-green); }
 
-    /* Summary Section - Updated Order [cite: 119-131] */
     .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
     .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--ps-green); }
     .card .value { font-size: 28px; font-weight: 700; color: var(--ps-dark-green); }
     .card .label { font-size: 13px; color: #666; margin-top: 4px; font-weight: 600; }
 
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* My Book Styles */
     table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
     th { background: var(--ps-green); color: white; padding: 14px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
     td { padding: 12px; border-bottom: 1px solid #eee; font-size: 12px; vertical-align: middle; }
-    
     .stage-group-header { background: var(--ps-light-green); font-weight: 700; color: var(--ps-dark-green); padding: 8px 12px; font-size: 11px; text-transform: uppercase; }
     .stage-spacer { height: 15px; background: var(--ps-light-gray); }
 
-    /* Adjustment Display Logic  */
+    /* Adjustments Display */
     .adj-wrapper { position: relative; }
     .adj-btn { background: #fff; border: 1px solid #ccc; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; text-align: left; display: flex; justify-content: space-between; }
     .adj-display { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; font-size: 10px; font-weight: 600; color: var(--ps-blue); }
     .adj-display.vertical { flex-direction: column; gap: 2px; }
     .adj-dropdown { display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ddd; padding: 10px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 220px; border-radius: 4px; }
     .adj-dropdown.active { display: block; }
+
+    /* Territory Styles */
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .layout-toggle button { background: white; border: 1px solid #ddd; padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .layout-toggle button.active { background: var(--ps-green); color: white; border-color: var(--ps-green); }
+    .im-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .im-list { display: flex; flex-direction: column; gap: 10px; }
+    .im-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-left: 5px solid var(--ps-green); position: relative; }
+    .im-card.high-load { border-left-color: var(--ps-red); }
+    .im-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .capacity-container { margin: 15px 0; position: relative; }
+    .progress-track { height: 12px; background: #eee; border-radius: 6px; position: relative; overflow: hidden; }
+    .progress-fill { height: 100%; transition: width 0.6s ease; }
+    .marker { position: absolute; top: -5px; width: 2px; height: 22px; background: #bbb; z-index: 2; }
+    .marker-label { position: absolute; top: -18px; font-size: 9px; font-weight: 700; color: #999; transform: translateX(-50%); }
+    textarea { width: 100%; height: 50px; margin-top: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; padding: 8px; color: #555; }
 
     .pill { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-block; }
     .red { background: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
@@ -65,9 +83,7 @@
 
 <div class="container">
   <header>
-    <div class="logo">
-      <img src="logo.png" alt="ParentSquare">
-    </div>
+    <div class="logo"><img src="logo.png" alt="ParentSquare"></div>
     <div class="header-text">
       <h1>Implementation Manager Deal Dashboard</h1>
       <p>Workload Visibility & Deal Assignment Support</p>
@@ -75,8 +91,8 @@
   </header>
 
   <div class="tabs">
-    <div class="tab active">My Book of Business</div>
-    <div class="tab">Territory Overview</div>
+    <div class="tab active" onclick="switchView('my-book')">My Book of Business</div>
+    <div class="tab" onclick="switchView('territory')">Territory Overview</div>
     <div class="tab">Total Team Workload</div>
   </div>
 
@@ -104,17 +120,24 @@
     </table>
   </div>
 
-  <footer>
-    © 2026 ParentSquare • Implementation Manager Dashboard • Evan Tambini
-  </footer>
+  <div id="view-territory" class="view">
+    <div class="controls">
+      <h2 style="color: var(--ps-dark-green); margin: 0;">Territory Load Overview</h2>
+      <div class="layout-toggle">
+        <button id="btn-grid" class="active" onclick="setLayout('grid')">Card View</button>
+        <button id="btn-list" onclick="setLayout('list')">List View</button>
+      </div>
+    </div>
+    <div id="territory-display" class="im-grid"></div>
+  </div>
+
+  <footer>© 2026 ParentSquare • Implementation Manager Dashboard • Evan Tambini</footer>
 </div>
 
 <script>
-// IM Capacity Logic [cite: 122-131]
+// Logic & Scoring [cite: 66-117, 122-131]
 const CURRENT_IM_TIER = "T3"; 
 const MPC_VALUES = { "T1": 70, "T2": 90, "T3": 120, "T4": 120, "T5": 90 };
-
-// Scoring Logic [cite: 66-117]
 const SIS_PTS = { "PowerSchool": 3, "One Roster SFTP": 3, "Infinite Campus": 2, "Aeries": 2, "Skyward SFTP": 2, "Clever": 2, "RenWeb/FACTS": 1, "Aequitas": 2, "Generic SFTP": 1 };
 const SIZE_PTS = { "Single": 1, "Small": 1, "Medium": 3, "Large": 2, "Enterprise": 2, "Strategic": 4 };
 const HEALTH_PTS = { "green": 0, "yellow": 1, "red": 2 };
@@ -125,16 +148,21 @@ let myDeals = [
   { id: 1, stage: "Inbound", name: "Oak Unified", size: "Strategic", sis: "PowerSchool", health: "green", adj: ["Pilots"] },
   { id: 2, stage: "Kickoff", name: "Maple Academy", size: "Medium", sis: "Aeries", health: "yellow", adj: [] },
   { id: 3, stage: "Setup", name: "Pine Charter", size: "Small", sis: "Skyward SFTP", health: "red", adj: ["DSAs/DUAs/DPAs", "DOEs", "Pilots"] },
-  { id: 4, stage: "Feature Enablement", name: "Willow Creek", size: "Large", sis: "Infinite Campus", health: "yellow", adj: ["Extended Launch"] },
-  { id: 5, stage: "Platform Ready", name: "Birch District", size: "Strategic", sis: "One Roster SFTP", health: "green", adj: [] },
-  { id: 6, stage: "Monitor", name: "Cedar Heights", size: "Medium", sis: "Generic SFTP", health: "green", adj: [] },
-  { id: 7, stage: "Inbound", name: "Elm Schools", size: "Single", sis: "Clever", health: "green", adj: [] },
-  { id: 8, stage: "Setup", name: "Poplar Prep", size: "Medium", sis: "RenWeb/FACTS", health: "red", adj: ["Proof of Concept"] },
-  { id: 9, stage: "Monitor", name: "Linden Academy", size: "Small", sis: "Aeries", health: "green", adj: [] },
-  { id: 10, stage: "Platform Ready", name: "Ash Regional", size: "Large", sis: "PowerSchool", health: "yellow", adj: [] },
-  { id: 11, stage: "Setup", name: "Cypress Unified", size: "Medium", sis: "Skyward SFTP", health: "green", adj: [] },
-  { id: 12, stage: "On Hold", name: "Palm Groves", size: "Large", sis: "Infinite Campus", health: "red", adj: ["DOEs", "Extended Launch"] }
+  { id: 4, stage: "Feature Enablement", name: "Willow Creek", size: "Large", sis: "Infinite Campus", health: "yellow", adj: ["Extended Launch"] }
 ];
+
+const territoryIMs = [
+  { name: "Alex R.", tier: "T4", currentPoints: 105, notes: "Managing large district launch." },
+  { name: "Jordan M.", tier: "T2", currentPoints: 65, notes: "" },
+  { name: "Casey S.", tier: "T3", currentPoints: 45, notes: "" }
+];
+
+function switchView(tabId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + tabId).classList.add('active');
+  event.target.classList.add('active');
+}
 
 function calculateTotalPoints(deal) {
   return (SIZE_PTS[deal.size] || 0) + (SIS_PTS[deal.sis] || 0) + (HEALTH_PTS[deal.health] || 0) + deal.adj.length;
@@ -147,49 +175,30 @@ function updateAdj(dealId, option) {
   renderDashboard();
 }
 
+function setLayout(mode) {
+  const display = document.getElementById('territory-display');
+  display.className = mode === 'grid' ? 'im-grid' : 'im-list';
+  document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
+  document.getElementById('btn-list').classList.toggle('active', mode === 'list');
+}
+
 function renderDashboard() {
   const body = document.getElementById('my-deals-body');
   body.innerHTML = '';
   let totalPoints = 0, riskCount = 0;
-
   myDeals.sort((a, b) => STAGES.indexOf(a.stage) - STAGES.indexOf(b.stage));
-
   let currentStage = "";
+
   myDeals.forEach(deal => {
     if (deal.stage !== currentStage) {
       if (currentStage !== "") body.innerHTML += `<tr class="stage-spacer"><td colspan="7"></td></tr>`;
       body.innerHTML += `<tr><td colspan="7" class="stage-group-header">${deal.stage}</td></tr>`;
       currentStage = deal.stage;
     }
-
     const pts = calculateTotalPoints(deal);
     totalPoints += pts;
-    if (deal.health === 'red' || deal.health === 'yellow') riskCount++;
-
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td style="color:#888; font-weight:600;">${deal.stage}</td>
-      <td><strong>${deal.name}</strong></td>
-      <td>${deal.size} (${SIZE_PTS[deal.size]})</td>
-      <td>${deal.sis} (${SIS_PTS[deal.sis]})</td>
-      <td><span class="pill ${deal.health}">${deal.health} (${HEALTH_PTS[deal.health]})</span></td>
-      <td>
-        <div class="adj-wrapper">
-          <div class="adj-display ${deal.adj.length > 2 ? 'vertical' : ''}">
-            ${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}
-          </div>
-          <div class="adj-btn" onclick="document.getElementById('adj-menu-${deal.id}').classList.toggle('active')">
-            <span>Manage Adjustments</span>
-            <span>▼</span>
-          </div>
-          <div class="adj-dropdown" id="adj-menu-${deal.id}">
-            ${ADJ_OPTIONS.map(opt => `<label class="adj-option" style="display:block; margin-bottom:5px;"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt}</label>`).join('')}
-          </div>
-        </div>
-      </td>
-      <td style="font-size:14px; color:var(--ps-dark-green);"><strong>${pts}</strong></td>
-    `;
-    body.appendChild(row);
+    if (deal.health !== 'green') riskCount++;
+    body.innerHTML += `<tr><td>${deal.stage}</td><td><strong>${deal.name}</strong></td><td>${deal.size} (${SIZE_PTS[deal.size]})</td><td>${deal.sis} (${SIS_PTS[deal.sis]})</td><td><span class="pill ${deal.health}">${deal.health} (${HEALTH_PTS[deal.health]})</span></td><td><div class="adj-wrapper"><div class="adj-display ${deal.adj.length > 2 ? 'vertical' : ''}">${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}</div><div class="adj-btn" onclick="document.getElementById('adj-menu-${deal.id}').classList.toggle('active')">Manage ▼</div><div class="adj-dropdown" id="adj-menu-${deal.id}">${ADJ_OPTIONS.map(opt => `<label class="adj-option"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt}</label>`).join('')}</div></div></td><td><strong>${pts}</strong></td></tr>`;
   });
 
   const mpc = MPC_VALUES[CURRENT_IM_TIER];
@@ -199,14 +208,17 @@ function renderDashboard() {
   document.getElementById('stat-risk').innerText = riskCount;
   document.getElementById('stat-cap').innerText = Math.round((totalPoints / mpc) * 100) + '%';
   document.getElementById('cur-tier').innerText = CURRENT_IM_TIER;
+
+  const display = document.getElementById('territory-display');
+  display.innerHTML = territoryIMs.map(im => {
+    const tMpc = MPC_VALUES[im.tier];
+    const tCap = Math.round((im.currentPoints / tMpc) * 100);
+    const color = tCap >= 90 ? 'var(--ps-red)' : (tCap >= 70 ? 'var(--ps-gold)' : 'var(--ps-green)');
+    return `<div class="im-card ${tCap >= 90 ? 'high-load' : ''}"><div class="im-header"><strong>${im.name}</strong><span class="im-tier">${im.tier}</span></div><div>Points: ${im.currentPoints}/${tMpc}</div><div class="capacity-container"><div class="marker-label" style="left:70%">70%</div><div class="marker" style="left:70%"></div><div class="marker-label" style="left:90%">90%</div><div class="marker" style="left:90%"></div><div class="progress-track"><div class="progress-fill" style="width:${tCap}%; background:${color}"></div></div></div><textarea placeholder="Notes...">${im.notes}</textarea></div>`;
+  }).join('');
 }
 
-window.onclick = function(event) {
-  if (!event.target.closest('.adj-wrapper')) {
-    document.querySelectorAll('.adj-dropdown').forEach(d => d.classList.remove('active'));
-  }
-}
-
+window.onclick = function(event) { if (!event.target.closest('.adj-wrapper')) document.querySelectorAll('.adj-dropdown').forEach(d => d.classList.remove('active')); }
 renderDashboard();
 </script>
 </body>
