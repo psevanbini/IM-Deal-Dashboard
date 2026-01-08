@@ -37,13 +37,14 @@
     .card .value { font-size: 28px; font-weight: 700; color: var(--ps-dark-green); }
     .card .label { font-size: 13px; color: #666; margin-top: 4px; font-weight: 600; }
     .risk-breakdown { font-size: 11px; color: #888; font-weight: 700; margin-top: 2px; }
+
     .summary-cap-bar { height: 6px; background: #eee; border-radius: 3px; margin-top: 8px; overflow: hidden; }
     .summary-cap-fill { height: 100%; transition: width 0.5s; }
 
     .view { display: none; }
     .view.active { display: block; }
 
-    /* Book of Business Table Styles */
+    /* Book Styles */
     table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: visible; }
     th { background: var(--ps-green); color: white; padding: 14px; text-align: left; font-size: 12px; text-transform: uppercase; }
     td { padding: 12px; border-bottom: 1px solid #eee; font-size: 12px; vertical-align: middle; }
@@ -55,7 +56,7 @@
     .yellow { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
     .green { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
 
-    /* Adjustment Menus */
+    /* Adj logic */
     .adj-wrapper { position: relative; }
     .adj-btn { background: #fff; border: 1px solid #ccc; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; text-align: left; display: flex; justify-content: space-between; }
     .adj-display { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; font-size: 10px; font-weight: 600; color: var(--ps-blue); }
@@ -63,12 +64,11 @@
     .adj-dropdown.active { display: block; }
     .adj-dropdown.open-up { bottom: 100%; top: auto; margin-bottom: 5px; }
 
-    /* Global UI Controls */
+    /* UI Logic */
     .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; }
     .btn-action { background: white; border: 1px solid #ddd; padding: 8px 16px; cursor: pointer; font-size: 12px; font-weight: 600; border-radius: 4px; transition: 0.2s; }
     .btn-action.active { background: var(--ps-green) !important; color: white !important; border-color: var(--ps-green) !important; }
 
-    /* Card/List Displays */
     .tier-section-header { background: #eef1f5; padding: 10px 20px; margin: 20px 0 10px 0; border-radius: 4px; font-weight: 700; border-left: 5px solid var(--ps-dark-green); }
     .im-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .im-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-left: 5px solid var(--ps-green); position: relative; }
@@ -78,6 +78,7 @@
     .im-list-table { width: 100%; background: white; border-radius: 8px; border-collapse: collapse; }
     .im-list-table th { background: var(--ps-dark-gray); color: white; padding: 10px; font-size: 11px; }
     .im-list-table td { padding: 10px; border-bottom: 1px solid #eee; }
+    .im-list-table tr.overload { background-color: var(--ps-overload-bg); }
     .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
     .capacity-container { margin: 25px 0 15px 0; position: relative; }
@@ -90,7 +91,6 @@
     .btn-save, .btn-rotation { background: var(--ps-blue); color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; }
     .btn-rotation.off { background: #999; }
 
-    /* Assignment Styles */
     .review-card { background: var(--ps-light-green); border-left: 6pt solid var(--ps-green); padding: 25px; border-radius: 8px; margin-bottom: 20px; }
     .assign-select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 12px; width: 450px; margin: 10px 0; }
 
@@ -132,7 +132,7 @@
   </div>
 
   <div id="view-territory" class="view">
-    <div class="controls"><h2 style="color:var(--ps-dark-green); margin:0;">Territory Load Overview</h2>
+    <div class="controls"><h2 style="color:var(--ps-dark-green); margin:0;">Territory Load Overview (EST)</h2>
       <div class="control-group">
         <button id="btn-grid-territory" class="btn-action" onclick="setLayout('grid')">Card View</button>
         <button id="btn-list-territory" class="btn-action active" onclick="setLayout('list')">List View</button>
@@ -187,7 +187,7 @@ let currentTab = 'my-book';
 let currentLayout = 'list';
 let currentTZFilter = 'all';
 
-// LOCKED Data: 12 Examples for My Book
+// LOCKED MY BOOK DATA
 let myDeals = Array.from({length: 12}, (_, i) => ({
     id: i, stage: STAGES[i % STAGES.length], name: `Customer ${String.fromCharCode(65+i)}`, 
     size: i % 3 === 0 ? "Strategic" : (i % 3 === 1 ? "Medium" : "Large"), 
@@ -195,19 +195,19 @@ let myDeals = Array.from({length: 12}, (_, i) => ({
     health: i % 4 === 0 ? "yellow" : (i === 11 ? "red" : "green"), adj: []
 }));
 
-// Roster Data with Territories
 let imData = [
   { name: "Alex R.", tier: "T4", currentPoints: 125, dealsCount: 14, yellowRisk: 2, redRisk: 1, tz: "EST", isTerritory: true },
   { name: "Jordan M.", tier: "T2", currentPoints: 65, dealsCount: 9, yellowRisk: 1, redRisk: 0, tz: "EST", isTerritory: true },
-  { name: "Casey S.", tier: "T3", currentPoints: 45, dealsCount: 10, yellowRisk: 0, redRisk: 0, tz: "CST", isTerritory: true },
-  { name: "Morgan L.", tier: "T1", currentPoints: 68, dealsCount: 11, yellowRisk: 2, redRisk: 1, tz: "CST", isTerritory: true },
-  { name: "Riley W.", tier: "T2", currentPoints: 88, dealsCount: 13, yellowRisk: 2, redRisk: 0, tz: "PST", isTerritory: true },
-  { name: "Skyler P.", tier: "T5", currentPoints: 40, dealsCount: 9, yellowRisk: 0, redRisk: 0, tz: "PST", isTerritory: true },
+  { name: "Casey S.", tier: "T3", currentPoints: 45, dealsCount: 10, yellowRisk: 0, redRisk: 0, tz: "EST", isTerritory: true },
+  { name: "Morgan L.", tier: "T1", currentPoints: 68, dealsCount: 11, yellowRisk: 2, redRisk: 1, tz: "EST", isTerritory: true },
+  { name: "Riley W.", tier: "T2", currentPoints: 88, dealsCount: 13, yellowRisk: 2, redRisk: 0, tz: "EST", isTerritory: true },
+  { name: "Skyler P.", tier: "T5", currentPoints: 40, dealsCount: 9, yellowRisk: 0, redRisk: 0, tz: "EST", isTerritory: true },
   { name: "Taylor B.", tier: "T3", currentPoints: 115, dealsCount: 14, yellowRisk: 2, redRisk: 2, tz: "EST", isTerritory: true },
-  { name: "Quinn J.", tier: "T1", currentPoints: 30, dealsCount: 9, yellowRisk: 0, redRisk: 0, tz: "CST", isTerritory: true }
+  { name: "Quinn J.", tier: "T1", currentPoints: 30, dealsCount: 9, yellowRisk: 0, redRisk: 0, tz: "EST", isTerritory: true }
 ];
-const tzs = ["EST", "CST", "PST"];
-for(let i=1; i<=15; i++) { imData.push({ name: `IM User ${i}`, tier: `T${Math.floor(Math.random()*4)+1}`, currentPoints: Math.floor(Math.random()*85), dealsCount: 10, yellowRisk: 1, redRisk: 0, tz: tzs[i % 3], isTerritory: false }); }
+
+const extraTzs = ["CST", "PST"];
+for(let i=1; i<=15; i++) { imData.push({ name: `IM User ${i}`, tier: `T${Math.floor(Math.random()*4)+1}`, currentPoints: Math.floor(Math.random()*85), dealsCount: 10, yellowRisk: 1, redRisk: 0, tz: extraTzs[i % 2], isTerritory: false }); }
 
 let reviewQueue = [{ id: 101, name: "West Valley USD", size: "Strategic", sis: "PowerSchool", adj: [] }];
 
@@ -225,13 +225,13 @@ function switchView(tabId) {
 
 function updateMetrics() {
   let deals = 0, points = 0, yellow = 0, red = 0, maxPts = 0;
-  let roster = currentTab === 'territory' ? imData.filter(im => im.isTerritory) : imData;
+  let roster = currentTab === 'territory' ? imData.filter(im => im.tz === "EST") : imData;
   if (currentTab === 'my-book') {
     myDeals.forEach(d => { points += (SIZE_PTS[d.size] + SIS_PTS[d.sis] + HEALTH_PTS[d.health] + d.adj.length); if (d.health === 'yellow') yellow++; if (d.health === 'red') red++; });
     deals = 12; maxPts = 120; document.getElementById('tier-context').innerText = "(T3)";
   } else {
     roster.forEach(im => { deals += im.dealsCount; points += im.currentPoints; yellow += im.yellowRisk; red += im.redRisk; maxPts += MPC_VALUES[im.tier]; });
-    document.getElementById('tier-context').innerText = "(Avg)";
+    document.getElementById('tier-context').innerText = currentTab === 'territory' ? "(EST Avg)" : "(Team Avg)";
   }
   const capPct = Math.round((points / maxPts) * 100);
   const color = capPct >= 90 ? 'var(--ps-red)' : (capPct >= 75 ? 'var(--ps-gold)' : 'var(--ps-green)');
@@ -240,18 +240,6 @@ function updateMetrics() {
   document.getElementById('risk-breakdown-text').innerText = `${yellow} Yellow / ${red} Red`;
   document.getElementById('stat-cap').innerText = capPct + '%'; document.getElementById('summary-cap-fill').style.width = capPct + '%';
   document.getElementById('summary-cap-fill').style.background = color;
-}
-
-function setLayout(m) { 
-  currentLayout = m; 
-  renderTeamContent();
-}
-
-function setTZFilter(tz) {
-  currentTZFilter = tz;
-  document.querySelectorAll('[id^="filter-"]').forEach(b => b.classList.remove('active'));
-  document.getElementById('filter-' + tz.toLowerCase()).classList.add('active');
-  renderTeamContent();
 }
 
 function renderMyBook() {
@@ -264,7 +252,7 @@ function renderMyBook() {
       body.innerHTML += `<tr><td colspan="7" class="stage-group-header">${deal.stage}</td></tr>`;
       currentStage = deal.stage;
     }
-    const pts = (SIZE_PTS[deal.size] + SIS_PTS[deal.sis] + HEALTH_PTS[deal.health] + deal.adj.length);
+    const pts = (SIZE_PTS[deal.size] || 0) + (SIS_PTS[deal.sis] || 0) + (HEALTH_PTS[deal.health] || 0) + deal.adj.length;
     body.innerHTML += `<tr><td>${deal.stage}</td><td><strong>${deal.name}</strong></td><td>${deal.size} (${SIZE_PTS[deal.size]})</td><td>${deal.sis} (${SIS_PTS[deal.sis]})</td><td><span class="pill ${deal.health}">${deal.health} (${HEALTH_PTS[deal.health]})</span></td>
       <td><div class="adj-wrapper"><div class="adj-display">${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}</div>
       <div class="adj-btn" onclick="toggleAdjMenu(${deal.id}, this)">Manage ▼</div>
@@ -278,14 +266,12 @@ function renderTeamContent() {
   const display = document.getElementById(displayId); if(!display) return;
   display.innerHTML = '';
   
-  let roster = currentTab === 'territory' ? imData.filter(im => im.isTerritory) : [...imData];
-  if (currentTab === 'total-team' && currentTZFilter !== 'all') {
-    roster = roster.filter(im => im.tz === currentTZFilter);
-  }
+  let roster = currentTab === 'territory' ? imData.filter(im => im.tz === "EST") : [...imData];
+  if (currentTab === 'total-team' && currentTZFilter !== 'all') roster = roster.filter(im => im.tz === currentTZFilter);
 
-  // Update button greens
   document.querySelectorAll(`[id^="btn-grid"], [id^="btn-list"]`).forEach(b => b.classList.remove('active'));
-  document.getElementById(`btn-${currentLayout}-${currentTab.includes('team') ? 'team' : 'territory'}`).classList.add('active');
+  const btnId = `btn-${currentLayout}-${currentTab.includes('team') ? 'team' : 'territory'}`;
+  if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
 
   const sorted = roster.sort((a, b) => b.tier.localeCompare(a.tier) || a.name.localeCompare(b.name));
 
@@ -319,7 +305,7 @@ function renderTeamContent() {
         <div style="font-size:11px; margin:8px 0;">📋 Deals: ${im.dealsCount} | ⚠️ Risk: ${im.yellowRisk+im.redRisk} (${im.yellowRisk}Y/${im.redRisk}R)</div>
         <div style="font-size:11px;">Points: <strong>${im.currentPoints}</strong> / ${mpc}</div>
         <div class="capacity-container">
-          ${[25, 50, 75, 90].map(m => `<div class="marker-label" style="left:${m}%">${m}%<br>(${Math.round(mpc*(m/100))})</div><div class="marker" style="left:${m}%"></div>`).join('')}
+          ${[25, 50, 75, 90].map(m => `<div class="marker-label" style="left:${m}%">${m}%</div><div class="marker" style="left:${m}%"></div>`).join('')}
           <div class="progress-track"><div class="progress-fill" style="width:${Math.min(cap,100)}%; background:${color}"></div></div>
         </div>
         <textarea placeholder="Notes...">${localStorage.getItem('n_'+im.name)||''}</textarea><button class="btn-save" onclick="sNote('${im.name}',this)" style="float:right;margin-top:5px;">Save</button></div>`;
@@ -338,11 +324,12 @@ function renderReviewQueue() {
           ${ADJ_OPTIONS.map(opt => `<label style="font-size:10px;"><input type="checkbox" onchange="upRevPts(${item.id}, '${opt}')"> ${opt} (+1)</label>`).join('')}
         </div>
       </div>
-      <p style="font-size:13px; font-weight:700;">Projected Load: <span id="rev-tot-${item.id}">${total}</span> pts</p>
+      <p style="font-size:13px; font-weight:700;">Projected Total Load: <span id="rev-tot-${item.id}">${total}</span> pts</p>
       <label style="font-size:11px; font-weight:700;">Suggested IM Assignment:</label><br>
       <select class="assign-select">${imData.filter(i=>localStorage.getItem('rot_'+i.name)!=='off').sort((a,b)=>b.tier.localeCompare(a.tier)).map(i=>`<option>${i.tier} - ${i.name} (${i.currentPoints}/${MPC_VALUES[i.tier]} pts - ${Math.round((i.currentPoints/MPC_VALUES[i.tier])*100)}%)</option>`).join('')}</select>
       <div style="margin-top:15px;"><button class="btn-action active" onclick="finRev(${item.id}, true)">Approve & Assign</button> <button class="btn-action" onclick="finRev(${item.id}, false)">Hold Review</button></div></div>`;
   }).join('');
+  updateBadges();
 }
 
 function renderOverloadReviews() {
@@ -351,9 +338,20 @@ function renderOverloadReviews() {
   container.innerHTML = overloads.length ? overloads.map(im => `<div class="review-card" style="background:#fffaf0; border-left:6pt solid var(--ps-red);">
     <p><strong>${im.name} (${im.tier})</strong> is at ${Math.round((im.currentPoints/MPC_VALUES[im.tier])*100)}% capacity. <strong>Auto-off rotation.</strong></p>
     <button class="btn-action active" onclick="localStorage.setItem('rot_${im.name}','on'); switchView('total-team');">Manually Re-enable Rotation</button></div>`).join('') : '';
-  const count = overloads.length + reviewQueue.length;
-  document.getElementById('main-badge').innerText = count;
-  document.getElementById('sub-badge').innerText = count;
+  updateBadges();
+}
+
+function updateBadges() {
+  const c = reviewQueue.length + imData.filter(im => (im.currentPoints / MPC_VALUES[im.tier]) >= 1.0).length;
+  document.getElementById('main-badge').innerText = c;
+  document.getElementById('sub-badge').innerText = c;
+}
+
+function setTZFilter(tz) {
+  currentTZFilter = tz;
+  document.querySelectorAll('[id^="filter-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('filter-' + tz.toLowerCase()).classList.add('active');
+  renderTeamContent();
 }
 
 function toggleAdjMenu(id, element) {
@@ -367,8 +365,8 @@ function toggleAdjMenu(id, element) {
 function updateAdj(id, opt) { const d = myDeals.find(x => x.id === id); const idx = d.adj.indexOf(opt); idx > -1 ? d.adj.splice(idx, 1) : d.adj.push(opt); renderMyBook(); updateMetrics(); }
 function upRevPts(id, opt) { const item = reviewQueue.find(i => i.id === id); const idx = item.adj.indexOf(opt); idx > -1 ? item.adj.splice(idx, 1) : item.adj.push(opt); document.getElementById(`rev-tot-${id}`).innerText = SIZE_PTS[item.size] + SIS_PTS[item.sis] + item.adj.length; }
 function finRev(id, app) { if(app) { reviewQueue = reviewQueue.filter(i => i.id !== id); alert('Assigned.'); switchView('total-team'); } else { document.getElementById(`rev-${id}`).style.opacity = '0.5'; } }
+function setLayout(m) { currentLayout = m; if (currentTab === 'territory') renderTeamContent(); else renderTeamContent(); }
 function switchSubTab(s) { document.getElementById('view-roster').style.display = s==='roster'?'block':'none'; document.getElementById('view-strat').style.display = s==='strat'?'block':'none'; document.getElementById('sub-team-roster').classList.toggle('active', s==='roster'); document.getElementById('sub-team-strat').classList.toggle('active', s==='strat'); }
-function toggleTierSort() { renderTeamContent(); }
 function tRot(n) { localStorage.setItem('rot_'+n, localStorage.getItem('rot_'+n)==='off'?'on':'off'); renderTeamContent(); updateMetrics(); }
 function sNote(n,e) { localStorage.setItem('n_'+n, e.parentElement.querySelector('textarea, input').value); e.innerText = 'Saved!'; setTimeout(()=>e.innerText='Save', 1000); }
 
