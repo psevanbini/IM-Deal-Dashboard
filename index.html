@@ -30,6 +30,7 @@
     .tab { padding-bottom: 12px; cursor: pointer; font-weight: 600; color: #666; }
     .tab.active { color: var(--ps-green); border-bottom: 4px solid var(--ps-green); }
 
+    /* Summary Section */
     .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
     .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--ps-green); }
     .card .value { font-size: 28px; font-weight: 700; color: var(--ps-dark-green); }
@@ -42,7 +43,8 @@
     .view { display: none; }
     .view.active { display: block; }
 
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+    /* My Book Styles */
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: visible; }
     th { background: var(--ps-green); color: white; padding: 14px; text-align: left; font-size: 12px; text-transform: uppercase; }
     td { padding: 12px; border-bottom: 1px solid #eee; font-size: 12px; vertical-align: middle; }
     .stage-group-header { background: var(--ps-light-green); font-weight: 700; color: var(--ps-dark-green); padding: 8px 12px; font-size: 11px; text-transform: uppercase; }
@@ -53,13 +55,17 @@
     .yellow { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
     .green { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
 
+    /* Adjustment UI - Fixed Overflow logic */
     .adj-wrapper { position: relative; }
     .adj-btn { background: #fff; border: 1px solid #ccc; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; text-align: left; display: flex; justify-content: space-between; }
     .adj-display { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; font-size: 10px; font-weight: 600; color: var(--ps-blue); }
     .adj-display.vertical { flex-direction: column; gap: 2px; }
-    .adj-dropdown { display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ddd; padding: 10px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 220px; border-radius: 4px; }
+    .adj-dropdown { display: none; position: absolute; left: 0; background: white; border: 1px solid #ddd; padding: 10px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 220px; border-radius: 4px; }
     .adj-dropdown.active { display: block; }
+    .adj-dropdown.open-up { bottom: 100%; top: auto; margin-bottom: 5px; }
+    .adj-dropdown.open-down { top: 100%; bottom: auto; margin-top: 5px; }
 
+    /* Territory UI Controls */
     .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; }
     .btn-action { background: white; border: 1px solid #ddd; padding: 8px 16px; cursor: pointer; font-size: 12px; font-weight: 600; border-radius: 4px; }
     .btn-action.active { background: var(--ps-green); color: white; border-color: var(--ps-green); }
@@ -129,14 +135,7 @@
   </div>
 
   <div id="view-territory" class="view">
-    <div class="controls">
-      <h2 style="color: var(--ps-dark-green); margin: 0;">Territory Load Overview</h2>
-      <div class="control-group">
-        <button id="sort-toggle" class="btn-action" onclick="toggleTierSort()">Sort Tier ↑↓</button>
-        <button id="btn-grid" class="btn-action active" onclick="setLayout('grid')">Card View</button>
-        <button id="btn-list" class="btn-action" onclick="setLayout('list')">List View</button>
-      </div>
-    </div>
+    <div class="controls"><h2 style="color: var(--ps-dark-green); margin: 0;">Territory Load Overview</h2><div class="control-group"><button id="sort-toggle" class="btn-action" onclick="toggleTierSort()">Sort Tier ↑↓</button><button id="btn-grid" class="btn-action active" onclick="setLayout('grid')">Card View</button><button id="btn-list" class="btn-action" onclick="setLayout('list')">List View</button></div></div>
     <div id="territory-display"></div>
   </div>
 
@@ -154,8 +153,12 @@ const ADJ_OPTIONS = ["Extended Launch", "Proof of Concept", "Pilots", "DSAs/DUAs
 
 let tierSortDir = 'desc';
 
+// My Book: 12 Examples with distinct points [cite: 100-117]
 let myDeals = Array.from({length: 12}, (_, i) => ({
-    id: i, stage: STAGES[i % STAGES.length], name: `Customer ${String.fromCharCode(65+i)}`, size: i % 2 === 0 ? "Strategic" : "Medium", sis: "PowerSchool", health: i % 4 === 0 ? "yellow" : (i === 11 ? "red" : "green"), adj: []
+    id: i, stage: STAGES[i % STAGES.length], name: `Customer ${String.fromCharCode(65+i)}`, 
+    size: i % 3 === 0 ? "Strategic" : (i % 3 === 1 ? "Medium" : "Large"), 
+    sis: i % 2 === 0 ? "PowerSchool" : "Infinite Campus", 
+    health: i % 4 === 0 ? "yellow" : (i === 11 ? "red" : "green"), adj: []
 }));
 
 let territoryIMs = [
@@ -205,6 +208,19 @@ function updateMetrics() {
   document.getElementById('summary-cap-fill').style.background = color;
 }
 
+// Logic to check screen space and flip dropdown if cut off
+function toggleAdjMenu(id, element) {
+  const menu = document.getElementById(`adj-menu-${id}`);
+  const rect = element.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - rect.bottom;
+  
+  menu.classList.remove('open-up', 'open-down');
+  if (spaceBelow < 250) { menu.classList.add('open-up'); } 
+  else { menu.classList.add('open-down'); }
+  
+  menu.classList.toggle('active');
+}
+
 function renderMyBook() {
   const body = document.getElementById('my-deals-body'); body.innerHTML = '';
   myDeals.sort((a, b) => STAGES.indexOf(a.stage) - STAGES.indexOf(b.stage));
@@ -217,16 +233,13 @@ function renderMyBook() {
     }
     const pts = calculateTotalPoints(deal);
     body.innerHTML += `<tr>
-      <td>${deal.stage}</td>
-      <td><strong>${deal.name}</strong></td>
+      <td>${deal.stage}</td><td><strong>${deal.name}</strong></td>
       <td>${deal.size} (${SIZE_PTS[deal.size]})</td>
       <td>${deal.sis} (${SIS_PTS[deal.sis]})</td>
       <td><span class="pill ${deal.health}">${deal.health} (${HEALTH_PTS[deal.health]})</span></td>
-      <td><div class="adj-wrapper">
-        <div class="adj-display ${deal.adj.length > 2 ? 'vertical' : ''}">${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}</div>
-        <div class="adj-btn" onclick="document.getElementById('adj-menu-${deal.id}').classList.toggle('active')">Manage ▼</div>
-        <div class="adj-dropdown" id="adj-menu-${deal.id}">${ADJ_OPTIONS.map(opt => `<label class="adj-option" style="display:block; margin-bottom:5px;"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt} (+1)</label>`).join('')}</div>
-      </div></td>
+      <td><div class="adj-wrapper"><div class="adj-display ${deal.adj.length > 2 ? 'vertical' : ''}">${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}</div>
+      <div class="adj-btn" onclick="toggleAdjMenu(${deal.id}, this)">Manage ▼</div>
+      <div class="adj-dropdown" id="adj-menu-${deal.id}">${ADJ_OPTIONS.map(opt => `<label class="adj-option" style="display:block; margin-bottom:5px;"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt} (+1)</label>`).join('')}</div></div></td>
       <td><strong>${pts}</strong></td>
     </tr>`;
   });
@@ -265,7 +278,12 @@ function renderTerritory() {
       const savedNote = localStorage.getItem(`note_${im.name}`) || "";
       const mpc = MPC_VALUES[im.tier], cap = Math.round((im.currentPoints / mpc) * 100);
       const color = cap >= 90 ? 'var(--ps-red)' : (cap >= 75 ? 'var(--ps-gold)' : 'var(--ps-green)');
-      grid.innerHTML += `<div class="im-card"><div style="display:flex; justify-content:space-between;"><strong>${im.name}</strong> <span class="pill green" style="font-size:9px;">${im.tier}</span></div><div style="font-size:11px; margin:5px 0;">📋 Deals: ${im.dealsCount} | ⚠️ Risk: ${im.yellowRisk + im.redRisk} (${im.yellowRisk}Y/${im.redRisk}R)</div><div style="font-size:11px;">Points: <strong>${im.currentPoints}</strong> / ${mpc}</div><div class="capacity-container"><div class="marker-label" style="left:25%">25%<br>(${Math.round(mpc*0.25)})</div><div class="marker" style="left:25%"></div><div class="marker-label" style="left:50%">50%<br>(${Math.round(mpc*0.5)})</div><div class="marker" style="left:50%"></div><div class="marker-label" style="left:75%">75%<br>(${Math.round(mpc*0.75)})</div><div class="marker" style="left:75%"></div><div class="marker-label" style="left:90%">90%<br>(${Math.round(mpc*0.9)})</div><div class="marker" style="left:90%"></div><div class="progress-track"><div class="progress-fill" style="width:${cap}%; background:${color}"></div></div></div><div class="note-container"><textarea placeholder="Notes...">${savedNote}</textarea><button class="btn-save" onclick="saveNotes('${im.name}', this)">Save</button></div></div>`;
+      grid.innerHTML += `<div class="im-card"><div style="display:flex; justify-content:space-between;"><strong>${im.name}</strong> <span class="pill green" style="font-size:9px;">${im.tier}</span></div><div style="font-size:11px; margin:5px 0;">📋 Deals: ${im.dealsCount} | ⚠️ Risk: ${im.yellowRisk + im.redRisk} (${im.yellowRisk}Y/${im.redRisk}R)</div><div style="font-size:11px;">Points: <strong>${im.currentPoints}</strong> / ${mpc}</div><div class="capacity-container">
+        <div class="marker-label" style="left:25%">25%<br>(${Math.round(mpc*0.25)})</div><div class="marker" style="left:25%"></div>
+        <div class="marker-label" style="left:50%">50%<br>(${Math.round(mpc*0.5)})</div><div class="marker" style="left:50%"></div>
+        <div class="marker-label" style="left:75%">75%<br>(${Math.round(mpc*0.75)})</div><div class="marker" style="left:75%"></div>
+        <div class="marker-label" style="left:90%">90%<br>(${Math.round(mpc*0.9)})</div><div class="marker" style="left:90%"></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${cap}%; background:${color}"></div></div></div><div class="note-container"><textarea placeholder="Notes...">${savedNote}</textarea><button class="btn-save" onclick="saveNotes('${im.name}', this)">Save</button></div></div>`;
     });
   }
 }
