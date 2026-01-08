@@ -48,6 +48,11 @@
     .stage-group-header { background: var(--ps-light-green); font-weight: 700; color: var(--ps-dark-green); padding: 8px 12px; font-size: 11px; text-transform: uppercase; }
     .stage-spacer { height: 15px; background: var(--ps-light-gray); }
 
+    .pill { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-block; text-transform: capitalize; }
+    .red { background: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+    .yellow { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
+    .green { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+
     .adj-wrapper { position: relative; }
     .adj-btn { background: #fff; border: 1px solid #ccc; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; width: 100%; text-align: left; display: flex; justify-content: space-between; }
     .adj-display { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; font-size: 10px; font-weight: 600; color: var(--ps-blue); }
@@ -71,7 +76,7 @@
     .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
     .capacity-container { margin: 25px 0 15px 0; position: relative; }
-    .progress-track { height: 14px; background: #eee; border-radius: 7px; position: relative; }
+    .progress-track { height: 14px; background: #eee; border-radius: 7px; position: relative; overflow: visible; }
     .progress-fill { height: 100%; transition: width 0.6s ease; border-radius: 7px; }
     .marker { position: absolute; top: 0px; width: 1px; height: 25px; background: #bbb; z-index: 2; }
     .marker-label { position: absolute; top: -22px; font-size: 8px; font-weight: 700; color: #777; transform: translateX(-50%); text-align: center; }
@@ -81,10 +86,7 @@
     .btn-rotation.off { background: #999; }
 
     .review-card { background: var(--ps-light-green); border-left: 6pt solid var(--ps-green); padding: 25px; border-radius: 8px; margin-bottom: 20px; }
-    .pill { padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-block; text-transform: capitalize; }
-    .red { background: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
-    .yellow { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
-    .green { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+    .assign-select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 12px; width: 350px; margin: 10px 0; }
 
     footer { text-align: center; padding: 40px; color: var(--ps-dark-gray); font-size: 10px; font-weight: 600; }
   </style>
@@ -156,8 +158,7 @@
     </div>
 
     <div id="view-strat" style="display:none;">
-      <div id="review-container">
-        </div>
+      <div id="review-container"></div>
     </div>
   </div>
 
@@ -176,7 +177,15 @@ let currentTab = 'my-book';
 let currentLayout = 'list';
 let tierSortDir = 'desc';
 
-// Unified Roster Data
+// My Book: 12 Examples (LOCKED)
+let myDeals = Array.from({length: 12}, (_, i) => ({
+    id: i, stage: STAGES[i % STAGES.length], name: `Customer ${String.fromCharCode(65+i)}`, 
+    size: i % 3 === 0 ? "Strategic" : (i % 3 === 1 ? "Medium" : "Large"), 
+    sis: i % 2 === 0 ? "PowerSchool" : "Infinite Campus", 
+    health: i % 4 === 0 ? "yellow" : (i === 11 ? "red" : "green"), adj: []
+}));
+
+// Unified Roster (8 Territory + 15 Others)
 let imData = [
   { name: "Alex R.", tier: "T4", currentPoints: 105, dealsCount: 12, yellowRisk: 1, redRisk: 1, territory: true },
   { name: "Jordan M.", tier: "T2", currentPoints: 65, dealsCount: 9, yellowRisk: 1, redRisk: 0, territory: true },
@@ -187,15 +196,9 @@ let imData = [
   { name: "Taylor B.", tier: "T3", currentPoints: 115, dealsCount: 14, yellowRisk: 2, redRisk: 2, territory: true },
   { name: "Quinn J.", tier: "T1", currentPoints: 30, dealsCount: 9, yellowRisk: 0, redRisk: 0, territory: true }
 ];
+for(let i=1; i<=15; i++) { imData.push({ name: `IM User ${i}`, tier: `T${Math.floor(Math.random()*4)+1}`, currentPoints: Math.floor(Math.random()*85), dealsCount: 10, yellowRisk: 1, redRisk: 0, territory: false }); }
 
-for(let i=1; i<=15; i++) {
-  imData.push({ name: `IM User ${i}`, tier: `T${Math.floor(Math.random()*4)+1}`, currentPoints: Math.floor(Math.random()*85), dealsCount: 10, yellowRisk: 1, redRisk: 0, territory: false });
-}
-
-// Assignment Review Queue
-let reviewQueue = [
-  { id: 101, name: "West Valley USD", size: "Strategic", sis: "PowerSchool", adj: [] }
-];
+let reviewQueue = [{ id: 101, name: "West Valley USD", size: "Strategic", sis: "PowerSchool", adj: [] }];
 
 function switchView(tabId) {
   currentTab = tabId;
@@ -212,34 +215,53 @@ function updateMetrics() {
   let deals = 0, points = 0, yellow = 0, red = 0, maxPts = 0;
   let roster = currentTab === 'territory' ? imData.filter(im => im.territory) : imData;
   if (currentTab === 'my-book') {
-    deals = 12; points = 45; yellow = 2; red = 1; maxPts = 120;
-    document.getElementById('tier-context').innerText = "(T3)";
+    myDeals.forEach(d => { points += (SIZE_PTS[d.size] + SIS_PTS[d.sis] + HEALTH_PTS[d.health] + d.adj.length); if (d.health === 'yellow') yellow++; if (d.health === 'red') red++; });
+    deals = 12; maxPts = 120; document.getElementById('tier-context').innerText = "(T3)";
   } else {
     roster.forEach(im => { deals += im.dealsCount; points += im.currentPoints; yellow += im.yellowRisk; red += im.redRisk; maxPts += MPC_VALUES[im.tier]; });
-    document.getElementById('tier-context').innerText = "(Team Avg)";
+    document.getElementById('tier-context').innerText = "(Avg)";
   }
   const capPct = Math.round((points / maxPts) * 100);
   const color = capPct >= 90 ? 'var(--ps-red)' : (capPct >= 75 ? 'var(--ps-gold)' : 'var(--ps-green)');
-  document.getElementById('stat-deals').innerText = deals;
-  document.getElementById('stat-points').innerText = points;
-  document.getElementById('max-pts').innerText = maxPts;
-  document.getElementById('stat-risk').innerText = yellow + red;
+  document.getElementById('stat-deals').innerText = deals; document.getElementById('stat-points').innerText = points;
+  document.getElementById('max-pts').innerText = maxPts; document.getElementById('stat-risk').innerText = yellow + red;
   document.getElementById('risk-breakdown-text').innerText = `${yellow} Yellow / ${red} Red`;
-  document.getElementById('stat-cap').innerText = capPct + '%';
-  document.getElementById('summary-cap-fill').style.width = capPct + '%';
+  document.getElementById('stat-cap').innerText = capPct + '%'; document.getElementById('summary-cap-fill').style.width = capPct + '%';
   document.getElementById('summary-cap-fill').style.background = color;
 }
 
-function toggleRotation(name) {
-  const cur = localStorage.getItem('rot_'+name) === 'off';
-  localStorage.setItem('rot_'+name, cur ? 'on' : 'off');
-  renderTabContent();
+function toggleAdjMenu(id, element) {
+  const menu = document.getElementById(`adj-menu-${id}`);
+  const rect = element.getBoundingClientRect();
+  menu.classList.remove('open-up');
+  if (window.innerHeight - rect.bottom < 250) menu.classList.add('open-up');
+  menu.classList.toggle('active');
 }
+
+function renderMyBook() {
+  const body = document.getElementById('my-deals-body'); body.innerHTML = '';
+  myDeals.sort((a, b) => STAGES.indexOf(a.stage) - STAGES.indexOf(b.stage));
+  let currentStage = "";
+  myDeals.forEach(deal => {
+    if (deal.stage !== currentStage) {
+      if (currentStage !== "") body.innerHTML += `<tr class="stage-spacer"><td colspan="7"></td></tr>`;
+      body.innerHTML += `<tr><td colspan="7" class="stage-group-header">${deal.stage}</td></tr>`;
+      currentStage = deal.stage;
+    }
+    const pts = (SIZE_PTS[deal.size] + SIS_PTS[deal.sis] + HEALTH_PTS[deal.health] + deal.adj.length);
+    body.innerHTML += `<tr><td>${deal.stage}</td><td><strong>${deal.name}</strong></td><td>${deal.size} (${SIZE_PTS[deal.size]})</td><td>${deal.sis} (${SIS_PTS[deal.sis]})</td><td><span class="pill ${deal.health}">${deal.health} (${HEALTH_PTS[deal.health]})</span></td>
+      <td><div class="adj-wrapper"><div class="adj-display ${deal.adj.length > 2 ? 'vertical' : ''}">${deal.adj.map(a => `<span>${a} (+1)</span>`).join('')}</div>
+      <div class="adj-btn" onclick="toggleAdjMenu(${deal.id}, this)">Manage ▼</div>
+      <div class="adj-dropdown" id="adj-menu-${deal.id}">${ADJ_OPTIONS.map(opt => `<label style="display:block; margin-bottom:5px;"><input type="checkbox" ${deal.adj.includes(opt) ? 'checked' : ''} onchange="updateAdj(${deal.id}, '${opt}')"> ${opt} (+1)</label>`).join('')}</div></div></td>
+      <td><strong>${pts}</strong></td></tr>`;
+  });
+}
+
+function updateAdj(id, opt) { const d = myDeals.find(x => x.id === id); const idx = d.adj.indexOf(opt); idx > -1 ? d.adj.splice(idx, 1) : d.adj.push(opt); renderMyBook(); updateMetrics(); }
 
 function renderTabContent() {
   const displayId = currentTab === 'territory' ? 'territory-display' : 'team-display';
-  const display = document.getElementById(displayId);
-  if(!display) return;
+  const display = document.getElementById(displayId); if(!display) return;
   display.innerHTML = '';
   let roster = currentTab === 'territory' ? imData.filter(im => im.territory) : imData;
   const sorted = [...roster].sort((a, b) => tierSortDir === 'desc' ? b.tier.localeCompare(a.tier) : a.tier.localeCompare(b.tier));
@@ -252,11 +274,9 @@ function renderTabContent() {
       const off = localStorage.getItem('rot_'+im.name) === 'off';
       const mpc = MPC_VALUES[im.tier], cap = Math.round((im.currentPoints / mpc) * 100);
       const color = cap >= 90 ? 'var(--ps-red)' : (cap >= 75 ? 'var(--ps-gold)' : 'var(--ps-green)');
-      table.querySelector('tbody').innerHTML += `<tr style="${off?'opacity:0.5':''}">
-        <td style="font-weight:700;">${im.tier}</td><td><strong>${im.name}</strong></td><td>${im.currentPoints}/${mpc}</td><td><span class="status-dot" style="background:${color}"></span>${cap}%</td><td>${im.dealsCount}</td><td>${im.yellowRisk}Y/${im.redRisk}R</td>
-        <td><button class="btn-rotation ${off?'off':''}" onclick="toggleRotation('${im.name}')">${off?'Off Rotation':'On Rotation'}</button></td>
-        <td><input type="text" class="list-note" value="${localStorage.getItem('n_'+im.name)||''}"></td>
-        <td><button class="btn-save" onclick="sNote('${im.name}',this)">Save</button></td></tr>`;
+      table.querySelector('tbody').innerHTML += `<tr style="${off?'opacity:0.5':''}"><td>${im.tier}</td><td><strong>${im.name}</strong></td><td>${im.currentPoints}/${mpc}</td><td><span class="status-dot" style="background:${color}"></span>${cap}%</td><td>${im.dealsCount}</td><td>${im.yellowRisk}Y/${im.redRisk}R</td>
+        <td><button class="btn-rotation ${off?'off':''}" onclick="tRot('${im.name}')">${off?'Off Rotation':'On Rotation'}</button></td>
+        <td><input type="text" class="list-note" value="${localStorage.getItem('n_'+im.name)||''}"></td><td><button class="btn-save" onclick="sNote('${im.name}',this)">Save</button></td></tr>`;
     });
   } else {
     let currentTier = ""; let grid;
@@ -270,14 +290,14 @@ function renderTabContent() {
       const mpc = MPC_VALUES[im.tier], cap = Math.round((im.currentPoints / mpc) * 100);
       const color = cap >= 90 ? 'var(--ps-red)' : (cap >= 75 ? 'var(--ps-gold)' : 'var(--ps-green)');
       grid.innerHTML += `<div class="im-card ${off?'off-rotation':''}">
-        <div style="display:flex; justify-content:space-between; align-items:center;"><strong>${im.name}</strong> <button class="btn-rotation ${off?'off':''}" onclick="toggleRotation('${im.name}')">${off?'Off Rotation':'On Rotation'}</button></div>
-        <div style="font-size:11px; margin:8px 0;">📋 Deals: ${im.dealsCount} | ⚠️ Risk: ${im.yellowRisk+im.redRisk} (${im.yellowRisk}Y/${im.redRisk}R)</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><strong>${im.name}</strong> <button class="btn-rotation ${off?'off':''}" onclick="tRot('${im.name}')">${off?'Off Rotation':'On Rotation'}</button></div>
+        <div style="font-size:11px; margin:8px 0;">📋 Deals: ${im.dealsCount} | ⚠️ Risk: ${im.yellowRisk+im.redRisk}</div>
         <div style="font-size:11px;">Points: <strong>${im.currentPoints}</strong> / ${mpc}</div>
         <div class="capacity-container">
-          <div class="marker-label" style="left:25%">25%</div><div class="marker" style="left:25%"></div>
-          <div class="marker-label" style="left:50%">50%</div><div class="marker" style="left:50%"></div>
-          <div class="marker-label" style="left:75%">75%</div><div class="marker" style="left:75%"></div>
-          <div class="marker-label" style="left:90%">90%</div><div class="marker" style="left:90%"></div>
+          <div class="marker-label" style="left:25%">25%<br>(${Math.round(mpc*0.25)})</div><div class="marker" style="left:25%"></div>
+          <div class="marker-label" style="left:50%">50%<br>(${Math.round(mpc*0.5)})</div><div class="marker" style="left:50%"></div>
+          <div class="marker-label" style="left:75%">75%<br>(${Math.round(mpc*0.75)})</div><div class="marker" style="left:75%"></div>
+          <div class="marker-label" style="left:90%">90%<br>(${Math.round(mpc*0.9)})</div><div class="marker" style="left:90%"></div>
           <div class="progress-track"><div class="progress-fill" style="width:${cap}%; background:${color}"></div></div>
         </div>
         <textarea placeholder="Notes...">${localStorage.getItem('n_'+im.name)||''}</textarea><button class="btn-save" onclick="sNote('${im.name}',this)" style="float:right;margin-top:5px;">Save</button></div>`;
@@ -288,70 +308,33 @@ function renderTabContent() {
 function renderReviewQueue() {
   const container = document.getElementById('review-container');
   container.innerHTML = reviewQueue.map(item => {
-    const basePts = SIZE_PTS[item.size] + SIS_PTS[item.sis];
-    const totalPts = basePts + item.adj.length;
-    return `<div class="review-card" id="review-${item.id}">
-      <h3 style="margin-top:0; color:var(--ps-dark-green);">Review Assignment: ${item.name}</h3>
-      <p style="font-size:12px;"><strong>Size:</strong> ${item.size} (${SIZE_PTS[item.size]}pts) | <strong>SIS:</strong> ${item.sis} (${SIS_PTS[item.sis]}pts)</p>
-      
-      <div style="margin-bottom:15px;">
-        <label style="font-size:11px; font-weight:700;">Add Deal Adjustments:</label><br>
+    const total = SIZE_PTS[item.size] + SIS_PTS[item.sis] + item.adj.length;
+    return `<div class="review-card" id="rev-${item.id}"><h3>Review: ${item.name}</h3>
+      <p style="font-size:12px;">${item.size} (${SIZE_PTS[item.size]}pts) + ${item.sis} (${SIS_PTS[item.sis]}pts)</p>
+      <div style="margin-bottom:15px;"><label style="font-size:11px; font-weight:700;">Add Adjustments:</label><br>
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top:5px;">
-          ${ADJ_OPTIONS.map(opt => `<label style="font-size:10px;"><input type="checkbox" onchange="updateReviewPts(${item.id}, '${opt}')"> ${opt} (+1)</label>`).join('')}
+          ${ADJ_OPTIONS.map(opt => `<label style="font-size:10px;"><input type="checkbox" onchange="upRevPts(${item.id}, '${opt}')"> ${opt} (+1)</label>`).join('')}
         </div>
       </div>
-
-      <p style="font-size:13px; font-weight:700;">Projected Total Load: <span id="rev-total-${item.id}">${totalPts}</span> Points</p>
-      
-      <label style="font-size:11px; font-weight:700;">Assign to Implementation Manager:</label><br>
-      <select class="assign-select">
-        ${imData.filter(i => localStorage.getItem('rot_'+i.name) !== 'off').sort((a,b) => b.tier.localeCompare(a.tier)).map(i => {
+      <p style="font-size:13px; font-weight:700;">Projected Load: <span id="rev-tot-${item.id}">${total}</span> pts</p>
+      <select class="assign-select">${imData.filter(i => localStorage.getItem('rot_'+i.name)!=='off').sort((a,b)=>b.tier.localeCompare(a.tier)).map(i => {
           const cap = Math.round((i.currentPoints/MPC_VALUES[i.tier])*100);
-          return `<option value="${i.name}">${i.tier} - ${i.name} (${i.currentPoints}/${MPC_VALUES[i.tier]} pts - ${cap}%)</option>`;
-        }).join('')}
-      </select>
-      <div style="margin-top:15px;">
-        <button class="btn-action active" onclick="finishReview(${item.id}, true)">Approve & Assign</button>
-        <button class="btn-action" onclick="finishReview(${item.id}, false)">Hold Review</button>
-      </div>
-    </div>`;
+          return `<option>${i.tier} - ${i.name} (${i.currentPoints}/${MPC_VALUES[i.tier]} pts - ${cap}%)</option>`;
+        }).join('')}</select>
+      <div style="margin-top:15px;"><button class="btn-action active" onclick="finRev(${item.id}, true)">Approve & Assign</button> <button class="btn-action" onclick="finRev(${item.id}, false)">Hold Review</button></div></div>`;
   }).join('');
-  
   document.getElementById('main-badge').innerText = reviewQueue.length;
   document.getElementById('sub-badge').innerText = reviewQueue.length;
 }
 
-function updateReviewPts(id, opt) {
-  const item = reviewQueue.find(i => i.id === id);
-  const idx = item.adj.indexOf(opt);
-  idx > -1 ? item.adj.splice(idx, 1) : item.adj.push(opt);
-  const total = SIZE_PTS[item.size] + SIS_PTS[item.sis] + item.adj.length;
-  document.getElementById(`rev-total-${id}`).innerText = total;
-}
-
-function finishReview(id, approved) {
-  if(approved) {
-    reviewQueue = reviewQueue.filter(i => i.id !== id);
-    alert('Assignment finalized and synced with HubSpot.');
-    renderReviewQueue();
-  } else {
-    document.getElementById(`review-${id}`).style.opacity = '0.6';
-  }
-}
-
-function switchSubTab(sub) {
-  document.getElementById('view-roster').style.display = sub === 'roster' ? 'block' : 'none';
-  document.getElementById('view-strat').style.display = sub === 'strat' ? 'block' : 'none';
-  document.getElementById('sub-team-roster').classList.toggle('active', sub === 'roster');
-  document.getElementById('sub-team-strat').classList.toggle('active', sub === 'strat');
-}
-
+function upRevPts(id, opt) { const item = reviewQueue.find(i => i.id === id); const idx = item.adj.indexOf(opt); idx > -1 ? item.adj.splice(idx, 1) : item.adj.push(opt); document.getElementById(`rev-tot-${id}`).innerText = SIZE_PTS[item.size] + SIS_PTS[item.sis] + item.adj.length; }
+function finRev(id, app) { if(app) { reviewQueue = reviewQueue.filter(i => i.id !== id); alert('Finalized.'); renderReviewQueue(); } else { document.getElementById(`rev-${id}`).style.opacity = '0.5'; } }
+function switchSubTab(sub) { document.getElementById('view-roster').style.display = sub === 'roster' ? 'block' : 'none'; document.getElementById('view-strat').style.display = sub === 'strat' ? 'block' : 'none'; document.getElementById('sub-team-roster').classList.toggle('active', sub === 'roster'); document.getElementById('sub-team-strat').classList.toggle('active', sub === 'strat'); }
 function toggleTierSort() { tierSortDir = tierSortDir === 'desc' ? 'asc' : 'desc'; renderTabContent(); }
 function setLayout(m) { currentLayout = m; renderTabContent(); }
+function tRot(n) { localStorage.setItem('rot_'+n, localStorage.getItem('rot_'+n)==='off'?'on':'off'); renderTabContent(); }
 function sNote(n,e) { localStorage.setItem('n_'+n, e.parentElement.querySelector('textarea, input').value); e.innerText = 'Saved!'; setTimeout(()=>e.innerText='Save', 1000); }
-
-// Initialize
-switchView('my-book');
+updateMetrics(); switchView('my-book');
 </script>
 </body>
 </html>
